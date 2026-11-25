@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0e1117">
+<title>陆战棋 · 翻棋本地版</title>
+<style>
+:root[data-theme="dark"]{
+  --bg:#0e1117; --panel:#181d27; --panel2:#202634; --line:#2b3444;
+  --txt:#eef3fa; --dim:#8c98ab; --gold:#ffd166; --red:#e05a4a; --blue:#7aa2e8;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--txt)}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+     user-select:none;-webkit-user-select:none;touch-action:none;-webkit-touch-callout:none}
+#app{width:100%;height:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column;padding:8px 10px 8px}
+.topbar{display:flex;align-items:center;justify-content:space-between;flex:0 0 auto;padding:1px 2px 6px}
+.title{font-size:17px;font-weight:800;letter-spacing:1px;line-height:1.15}
+.title .sub{display:block;font-size:9px;font-weight:500;letter-spacing:1.5px;color:var(--dim);margin-top:2px}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--dim);font-size:12px;
+      min-height:44px;padding:0 14px;border-radius:9px;line-height:1;cursor:pointer;white-space:nowrap}
+.chip.on{color:var(--gold);border-color:var(--gold)}
+.rules{flex:0 0 auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+       padding:9px 11px;margin-bottom:7px;font-size:11px;line-height:1.7;color:var(--dim);
+       max-height:40vh;overflow-y:auto;touch-action:pan-y}
+.rules.hide{display:none}
+.rules b{color:var(--txt)}
+.rules .k{color:var(--gold)}
+.status{display:flex;align-items:center;justify-content:space-between;flex:0 0 auto;
+        background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 11px;margin-bottom:7px}
+.turn{font-size:13px;font-weight:700;letter-spacing:.5px}
+.cnt{font-size:12px;color:var(--dim);white-space:nowrap}
+.cnt .r{color:var(--red);font-weight:800}
+.cnt .b{color:var(--blue);font-weight:800}
+.cnt b{font-variant-numeric:tabular-nums}
+.boardWrap{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center}
+#board{overflow:hidden;border-radius:8px;box-shadow:0 0 0 1px var(--line),0 8px 26px rgba(0,0,0,.45);background:#0e1117}
+.cell{float:left;position:relative;display:flex;align-items:center;justify-content:center;
+      box-sizing:border-box;border:1px solid #232c3b;background:#121722;color:var(--txt);
+      font-weight:800;cursor:pointer;overflow:hidden;padding:0}
+.cell .tx{display:block;line-height:1;white-space:nowrap;letter-spacing:0}
+.cell.empty{background:#0f141c;border-color:#1b2230}
+.cell.dark{
+  background-color:#4b5540;
+  background-image:
+    radial-gradient(ellipse at 20% 30%, rgba(122,136,86,.85) 0 17%, transparent 18%),
+    radial-gradient(ellipse at 74% 66%, rgba(50,60,40,.92) 0 21%, transparent 22%),
+    radial-gradient(ellipse at 60% 12%, rgba(98,112,72,.8) 0 14%, transparent 15%),
+    radial-gradient(ellipse at 30% 82%, rgba(38,46,32,.9) 0 16%, transparent 17%),
+    linear-gradient(135deg,#47513c,#39422f);
+  border:1px solid #2c3526}
+.cell.dark .tx{color:#d7deb4;opacity:.8;font-weight:700}
+.cell.red{background:linear-gradient(160deg,#c6402f,#8e241c);border:1px solid #ff8a78}
+.cell.red .tx{color:#fff4ee;text-shadow:0 1px 1px rgba(0,0,0,.35)}
+.cell.black{background:linear-gradient(160deg,#35486f,#1b2740);border:1px solid #6f8fd8}
+.cell.black .tx{color:#eaf2ff;text-shadow:0 1px 1px rgba(0,0,0,.4)}
+.cell.sel{box-shadow:inset 0 0 0 2px var(--gold),0 0 10px rgba(255,209,102,.55);z-index:2}
+.cell .dot{position:absolute;left:50%;bottom:5px;margin-left:-4px;width:8px;height:8px;border-radius:50%;
+           background:var(--gold);box-shadow:0 0 6px var(--gold);display:none}
+.cell.hint .dot{display:block}
+.logs{flex:0 0 auto;height:88px;overflow:hidden;background:var(--panel);border:1px solid var(--line);
+      border-radius:10px;margin-top:7px;padding:5px 9px}
+.logs .lg{font-size:10.5px;line-height:1.72;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logs .lg:first-child{color:var(--txt)}
+.bar{flex:0 0 auto;display:flex;gap:8px;margin-top:7px}
+.btn{flex:1;min-height:46px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);
+     font-size:13px;font-weight:700;letter-spacing:1px;border-radius:10px;cursor:pointer}
+.btn.warn{color:#f08080;border-color:#70403f}
+.btn.armed{color:#06201d;background:var(--gold);border-color:var(--gold)}
+.overlay{position:absolute;left:0;top:0;right:0;bottom:0;background:rgba(8,11,17,.84);
+         display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.overlay.hide{display:none}
+.card{width:100%;max-width:270px;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+      padding:20px 16px;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.5)}
+.card h1{margin:0 0 8px;font-size:22px;letter-spacing:1px}
+.card p{margin:0 0 16px;font-size:11px;line-height:1.7;color:var(--dim)}
+.bigbtn{width:100%;min-height:46px;padding:11px 0;border:0;border-radius:10px;background:var(--gold);color:#3a2a00;
+        font-size:14px;font-weight:800;letter-spacing:2px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="title">陆战棋<span class="sub">JUNQI · 翻棋暗棋 · 纯本地版</span></div>
+    <div class="tools"><button class="chip" id="ruleBtn" type="button">规则</button></div>
+  </div>
+
+  <div id="rules" class="rules hide">
+    <b>红先手，执红对战黑方（电脑）。</b>棋盘 5 行 × 10 列共 50 格，双方各 <span class="k">25 子</span>全部背面朝上随机摆满。<br>
+    每回合<b>二选一</b>：① 翻开任意一枚暗子（翻开后归该子颜色，随即换手）；② 移动一枚<b>己方已翻开</b>的棋子到上/下/左/右相邻一格（空格或敌方明子，斜向不可）。<br>
+    <b>军衔：</b>司令&gt;军长&gt;师长&gt;旅长&gt;团长&gt;营长&gt;连长&gt;排长&gt;工兵。大吃小，<span class="k">同级同归于尽</span>，小撞大阵亡。<br>
+    <b>特殊：</b>炸弹碰任意子（含地雷/军旗）双方同归于尽；地雷/军旗不可移动；<span class="k">工兵可挖地雷</span>，其它子撞雷阵亡；军旗被吃或被炸即判负。暗子必须先翻开才可被吃。<br>
+    <b>胜负：</b>对方军旗被扛/被炸，或对方无子可动且无暗子可翻，即获胜。<br>
+    <b>编制（每方）：</b>司令1 军长1 师长2 旅长2 团长2 营长2 连长3 排长3 工兵3 地雷3 炸弹2 军旗1。
+  </div>
+
+  <div class="status">
+    <div class="turn" id="turnTxt">红方回合</div>
+    <div class="cnt"><span class="r">红 <b id="redCnt">25</b></span>　/　<span class="b">黑 <b id="blackCnt">25</b></span></div>
+  </div>
+
+  <div class="boardWrap" id="boardWrap"><div id="board"></div></div>
+
+  <div class="logs" id="logs"></div>
+
+  <div class="bar">
+    <button class="btn" id="restartBtn" type="button">重新开始</button>
+    <button class="btn warn" id="resignBtn" type="button">认输</button>
+  </div>
+
+  <div class="overlay hide" id="overlay">
+    <div class="card">
+      <h1 id="ovTitle">红方胜</h1>
+      <p id="ovText"></p>
+      <button class="bigbtn" id="ovBtn" type="button">再来一局</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 纯逻辑引擎（不碰 DOM，暴露全局 E，便于自动化断言） ============ -->
+<script id="engine">
+var E = (function(){
+  'use strict';
+  var ROWS = 5, COLS = 10, SIZE = 50;
+  var RED = 'red', BLACK = 'black';
+  /* 每方编制：type 名称，rank 军衔数字(特殊子为 0/-1)，count 数量，kind 类别 */
+  var COMP = [
+    { type:'司令', rank:9, kind:'rank', count:1 },
+    { type:'军长', rank:8, kind:'rank', count:1 },
+    { type:'师长', rank:7, kind:'rank', count:2 },
+    { type:'旅长', rank:6, kind:'rank', count:2 },
+    { type:'团长', rank:5, kind:'rank', count:2 },
+    { type:'营长', rank:4, kind:'rank', count:2 },
+    { type:'连长', rank:3, kind:'rank', count:3 },
+    { type:'排长', rank:2, kind:'rank', count:3 },
+    { type:'工兵', rank:1, kind:'rank', count:3 },
+    { type:'地雷', rank:0, kind:'mine', count:3 },
+    { type:'炸弹', rank:0, kind:'bomb', count:2 },
+    { type:'军旗', rank:-1, kind:'flag', count:1 }
+  ];
+  var RANK_NAME = ['','工兵','排长','连长','营长','团长','旅长','师长','军长','司令'];
+
+  function idx(r,c){ return r*COLS+c; }
+  function rowOf(i){ return Math.floor(i/COLS); }
+  function colOf(i){ return i%COLS; }
+  function inBounds(r,c){ return r>=0 && r<ROWS && c>=0 && c<COLS; }
+  function isAdjacent(a,b){
+    return Math.abs(rowOf(a)-rowOf(b)) + Math.abs(colOf(a)-colOf(b)) === 1;
+  }
+  function neighbors(i){
+    var r=rowOf(i), c=colOf(i), res=[];
+    if(r>0) res.push(idx(r-1,c));
+    if(r<ROWS-1) res.push(idx(r+1,c));
+    if(c>0) res.push(idx(r,c-1));
+    if(c<COLS-1) res.push(idx(r,c+1));
+    return res;
+  }
+  function makePiece(id, side, def){
+    return { id:id, side:side, type:def.type, rank:def.rank, kind:def.kind, revealed:false };
+  }
+  function buildArmy(side, startId){
+    var arr=[], id=startId, i, j;
+    for(i=0;i<COMP.length;i++)
+      for(j=0;j<COMP[i].count;j++) arr.push(makePiece(id++, side, COMP[i]));
+    return arr;
+  }
+  function shuffle(a, rnd){
+    rnd = rnd || Math.random;
+    for(var i=a.length-1;i>0;i--){
+      var j=Math.floor(rnd()*(i+1));
+      var t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+  /* 新游戏：50 子洗牌后铺满棋盘，全暗，红先手 */
+  function newGame(rnd){
+    var red = buildArmy(RED, 0);
+    var black = buildArmy(BLACK, 100);
+    var all = shuffle(red.concat(black), rnd);
+    var board = new Array(SIZE), i;
+    for(i=0;i<SIZE;i++) board[i]=all[i];
+    return { board:board, turn:RED, winner:null, moveCount:0, started:false };
+  }
+
+  function movablePiece(p){
+    return !!p && p.revealed && (p.kind==='rank' || p.kind==='bomb');
+  }
+
+  /* 翻子：任意暗子都可翻；翻开后按其颜色归属，随即换手 */
+  function canFlip(state, i){
+    if(state.winner) return false;
+    if(i<0 || i>=SIZE) return false;
+    var p=state.board[i];
+    return !!p && !p.revealed;
+  }
+  function flip(state, i){
+    if(!canFlip(state,i)) return {ok:false};
+    var p=state.board[i];
+    p.revealed=true;
+    state.started=true;
+    state.moveCount++;
+    state.turn = (state.turn===RED ? BLACK : RED);
+    state.winner = checkWinner(state);
+    return {ok:true, piece:p, side:p.side, winner:state.winner};
+  }
+
+  /* 走子合法性：己方明子、可移动、上下左右相邻、目标为空格或对方明子（暗子须先翻） */
+  function canMove(state, from, to){
+    if(state.winner) return false;
+    if(from<0||from>=SIZE||to<0||to>=SIZE) return false;
+    if(!isAdjacent(from,to)) return false;
+    var a=state.board[from];
+    if(!a || a.side!==state.turn || !a.revealed) return false;
+    if(a.kind==='mine' || a.kind==='flag') return false;
+    var d=state.board[to];
+    if(!d) return true;
+    if(!d.revealed) return false;
+    if(d.side===a.side) return false;
+    return true;
+  }
+
+  /* 吃子判定：result 为 attacker_wins / defender_wins / both_die，flagLost 标记军旗方 */
+  function resolveBattle(attacker, defender){
+    var flagLost=null;
+    if(attacker.kind==='bomb' || defender.kind==='bomb'){
+      if(defender.kind==='flag') flagLost=defender.side;
+      if(attacker.kind==='flag') flagLost=attacker.side;
+      return {result:'both_die', flagLost:flagLost};
+    }
+    if(defender.kind==='mine'){
+      if(attacker.kind==='rank' && attacker.type==='工兵')
+        return {result:'attacker_wins', flagLost:null};
+      return {result:'defender_wins', flagLost:null};
+    }
+    if(defender.kind==='flag'){
+      flagLost=defender.side;
+      return {result:'attacker_wins', flagLost:flagLost};
+    }
+    if(attacker.kind==='mine' || attacker.kind==='flag')
+      return {result:'defender_wins', flagLost:null};
+    if(attacker.rank>defender.rank) return {result:'attacker_wins', flagLost:null};
+    if(attacker.rank===defender.rank) return {result:'both_die', flagLost:null};
+    return {result:'defender_wins', flagLost:null};
+  }
+
+  /* 执行走子，落子/吃子后换手并重判胜负 */
+  function move(state, from, to){
+    if(!canMove(state,from,to)) return {ok:false};
+    var a=state.board[from], d=state.board[to], battle=null;
+    if(!d){
+      state.board[to]=a; state.board[from]=null;
+    } else {
+      battle=resolveBattle(a,d);
+      if(battle.result==='attacker_wins'){ state.board[to]=a; state.board[from]=null; }
+      else if(battle.result==='defender_wins'){ state.board[from]=null; }
+      else { state.board[to]=null; state.board[from]=null; }
+    }
+    state.started=true;
+    state.moveCount++;
+    state.turn=(state.turn===RED ? BLACK : RED);
+    state.winner=checkWinner(state);
+    return {ok:true, battle:battle, attacker:a, defender:d, winner:state.winner, from:from, to:to};
+  }
+
+  function flagExists(board, side){
+    for(var i=0;i<SIZE;i++){ var p=board[i]; if(p && p.side===side && p.kind==='flag') return true; }
+    return false;
+  }
+  function countRevealed(board, side){
+    var n=0;
+    for(var i=0;i<SIZE;i++){ var p=board[i]; if(p && p.side===side && p.revealed) n++; }
+    return n;
+  }
+  function countAlive(board, side){
+    var n=0;
+    for(var i=0;i<SIZE;i++){ var p=board[i]; if(p && p.side===side) n++; }
+    return n;
+  }
+  function hasHidden(board){
+    for(var i=0;i<SIZE;i++){ var p=board[i]; if(p && !p.revealed) return true; }
+    return false;
+  }
+  function hasMovable(board, side){
+    for(var i=0;i<SIZE;i++){ var p=board[i]; if(p && p.side===side && movablePiece(p)) return true; }
+    return false;
+  }
+
+  /* 胜负：军旗被吃/炸立即判负；否则无暗子可翻且一方无可动明子则判负 */
+  function checkWinner(state){
+    var b=state.board;
+    if(!flagExists(b,RED)) return BLACK;
+    if(!flagExists(b,BLACK)) return RED;
+    if(!hasHidden(b)){
+      var rm=hasMovable(b,RED), bm=hasMovable(b,BLACK);
+      if(!rm && !bm) return 'draw';
+      if(!rm) return BLACK;
+      if(!bm) return RED;
+    }
+    return null;
+  }
+
+  /* ---- AI（黑方贪心）---- */
+  function pieceValue(p){
+    if(!p) return 0;
+    if(p.kind==='flag') return 100000;
+    if(p.kind==='mine') return 40;
+    if(p.kind==='bomb') return 55;
+    return p.rank*10;
+  }
+  function legalMoves(state, side){
+    var res=[], i, k;
+    for(i=0;i<SIZE;i++){
+      var p=state.board[i];
+      if(!p || p.side!==side || !movablePiece(p)) continue;
+      var ns=neighbors(i);
+      for(k=0;k<ns.length;k++) if(canMove(state,i,ns[k])) res.push({from:i,to:ns[k],p:p});
+    }
+    return res;
+  }
+  function hiddenIndices(board){
+    var res=[];
+    for(var i=0;i<SIZE;i++){ var p=board[i]; if(p && !p.revealed) res.push(i); }
+    return res;
+  }
+  function aiMove(state, rnd){
+    if(state.winner || state.turn!==BLACK) return null;
+    rnd = rnd || Math.random;
+    var moves=legalMoves(state,BLACK), bestScore=0, cand=[], safe=[], i, m, sc, d, b;
+    for(i=0;i<moves.length;i++){
+      m=moves[i]; d=state.board[m.to]; sc=0;
+      if(!d){ sc=1; }
+      else {
+        b=resolveBattle(m.p,d);
+        if(b.result==='defender_wins') continue;                 /* 不主动送死 / 低级别撞高级 */
+        else if(b.result==='attacker_wins') sc=1000+pieceValue(d);
+        else {                                                    /* 同归于尽：换子划算才做 */
+          sc=pieceValue(d)-pieceValue(m.p);
+          if(d.kind==='flag') sc+=100000;                         /* 炸/换掉军旗直接赢 */
+          if(sc<=0) continue;
+        }
+      }
+      safe.push(m);                                              /* 兜底也不选送死走法 */
+      if(sc>bestScore){ bestScore=sc; cand=[m]; }
+      else if(sc===bestScore && sc>0) cand.push(m);
+    }
+    if(bestScore>=1000 && cand.length){
+      var pick=cand[Math.floor(rnd()*cand.length)];
+      return {type:'move', from:pick.from, to:pick.to, score:bestScore};
+    }
+    var hid=hiddenIndices(state.board);
+    if(hid.length) return {type:'flip', idx:hid[Math.floor(rnd()*hid.length)]};  /* 带随机翻子 */
+    if(safe.length){
+      var pm=safe[Math.floor(rnd()*safe.length)];
+      return {type:'move', from:pm.from, to:pm.to, score:0};
+    }
+    return null;
+  }
+
+  return {
+    ROWS:ROWS, COLS:COLS, SIZE:SIZE, RED:RED, BLACK:BLACK, COMP:COMP, RANK_NAME:RANK_NAME,
+    idx:idx, rowOf:rowOf, colOf:colOf, inBounds:inBounds, isAdjacent:isAdjacent, neighbors:neighbors,
+    makePiece:makePiece, buildArmy:buildArmy, shuffle:shuffle, newGame:newGame, movablePiece:movablePiece,
+    canFlip:canFlip, flip:flip, canMove:canMove, move:move, resolveBattle:resolveBattle,
+    flagExists:flagExists, countRevealed:countRevealed, countAlive:countAlive,
+    hasHidden:hasHidden, hasMovable:hasMovable, checkWinner:checkWinner,
+    pieceValue:pieceValue, legalMoves:legalMoves, hiddenIndices:hiddenIndices, aiMove:aiMove
+  };
+})();
+</script>
+
+<!-- ============ 界面 / 渲染 / 事件（ES5，兼容 Android 7+ WebView） ============ -->
+<script>
+(function(){
+'use strict';
+var $ = function(id){ return document.getElementById(id); };
+var boardEl = $('board'), wrapEl = $('boardWrap');
+var cells = [], spans = [], dots = [], i;
+for(i=0;i<E.SIZE;i++){
+  var d=document.createElement('div'); d.className='cell'; d.setAttribute('data-i', i);
+  var sp=document.createElement('span'); sp.className='tx';
+  var dot=document.createElement('i'); dot.className='dot';
+  d.appendChild(sp); d.appendChild(dot); boardEl.appendChild(d);
+  cells[i]=d; spans[i]=sp; dots[i]=dot;
+}
+
+var S = {
+  game:null, sel:null, hints:[], logs:[], busy:false, over:false,
+  cell:40, sound:true
+};
+
+/* ---------- 本地存储（全部 try/catch，WebView 禁用存储也不崩） ---------- */
+function store(k,v){ try{ localStorage.setItem('jq_'+k, v); }catch(e){} }
+function read(k){ try{ return localStorage.getItem('jq_'+k); }catch(e){ return null; } }
+function save(){
+  try{
+    var g=S.game;
+    var d={ v:1, board:g.board, turn:g.turn, winner:g.winner, started:g.started,
+            moveCount:g.moveCount, logs:S.logs, sound:S.sound };
+    store('game', JSON.stringify(d));
+  }catch(e){}
+}
+function restore(){
+  var raw=read('game'); if(!raw) return false;
+  try{
+    var d=JSON.parse(raw);
+    if(!d || d.v!==1 || !d.board || d.board.length!==E.SIZE) return false;
+    S.game={ board:d.board, turn:d.turn, winner:d.winner, started:d.started, moveCount:d.moveCount };
+    S.logs = d.logs || [];
+    if(typeof d.sound==='boolean') S.sound=d.sound;
+    for(var i=0;i<E.SIZE;i++){
+      var p=S.game.board[i];
+      if(p && (typeof p.side!=='string' || typeof p.kind!=='string')) return false;
+    }
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ---------- 音效：Web Audio 实时合成，无音频文件 ---------- */
+var AC=null;
+function ensureAudio(){
+  if(!S.sound) return;
+  try{
+    if(!AC){ var C=window.AudioContext||window.webkitAudioContext; if(C) AC=new C(); }
+    if(AC && AC.state==='suspended' && AC.resume) AC.resume();
+  }catch(e){}
+}
+function tone(f,dur,type,vol,delay){
+  if(!AC) return;
+  try{
+    var t=AC.currentTime+(delay||0), o=AC.createOscillator(), g=AC.createGain();
+    o.type=type||'sine'; o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol||0.07,t+0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+dur+0.02);
+  }catch(e){}
+}
+function sfx(k){
+  if(!S.sound||!AC) return;
+  if(k==='flip') tone(430,0.06,'triangle',0.05);
+  else if(k==='sel') tone(520,0.04,'sine',0.03);
+  else if(k==='move') tone(240,0.05,'square',0.03);
+  else if(k==='eat'){ tone(180,0.09,'sawtooth',0.06); tone(120,0.12,'square',0.04,0.05); }
+  else if(k==='boom'){ tone(90,0.22,'sawtooth',0.08); }
+  else if(k==='ai') tone(300,0.05,'sine',0.025);
+  else if(k==='over'){ var f=[523,659,784,1047]; for(var n=0;n<f.length;n++) tone(f[n],0.2,'triangle',0.06,n*0.13); }
+}
+
+/* ---------- 尺寸：棋盘 5×10 自适应铺满宽度，每格正方形 ---------- */
+function layout(){
+  var w=wrapEl.clientWidth, h=wrapEl.clientHeight;
+  if(w<40||h<40) return;
+  var cell=Math.floor(w/E.COLS), maxH=Math.floor(h/E.ROWS);
+  if(maxH>0) cell=Math.min(cell,maxH);
+  if(cell<18) cell=18;
+  boardEl.style.width=(cell*E.COLS)+'px';
+  boardEl.style.height=(cell*E.ROWS)+'px';
+  var fs=Math.max(10,Math.floor(cell*0.34));
+  for(var i=0;i<E.SIZE;i++){
+    cells[i].style.width=cell+'px'; cells[i].style.height=cell+'px';
+    cells[i].style.fontSize=fs+'px';
+  }
+  S.cell=cell;
+}
+
+/* ---------- 渲染 ---------- */
+function sideName(s){ return s===E.RED?'红':'黑'; }
+function render(){
+  var g=S.game, b=g.board, i, p, cls;
+  for(i=0;i<E.SIZE;i++){
+    p=b[i]; cls='cell';
+    if(!p){ cls+=' empty'; spans[i].textContent=''; }
+    else if(!p.revealed){ cls+=' dark'; spans[i].textContent='?'; }
+    else { cls+=' open '+(p.side===E.RED?'red':'black'); spans[i].textContent=p.type; }
+    if(i===S.sel) cls+=' sel';
+    if(S.hints.indexOf(i)>=0) cls+=' hint';
+    cells[i].className=cls;
+  }
+  var tt;
+  if(g.winner) tt=(g.winner===E.RED?'红方胜！':(g.winner==='draw'?'平局':'黑方胜'));
+  else if(g.turn===E.RED) tt='红方回合 · 请走棋';
+  else tt='黑方思考中…';
+  $('turnTxt').textContent=tt;
+  $('redCnt').textContent=E.countAlive(b,E.RED);
+  $('blackCnt').textContent=E.countAlive(b,E.BLACK);
+  var box=$('logs'); box.innerHTML='';
+  for(i=0;i<S.logs.length;i++){
+    var dv=document.createElement('div'); dv.className='lg'; dv.textContent=S.logs[i]; box.appendChild(dv);
+  }
+}
+function pushLog(s){ S.logs.unshift(s); if(S.logs.length>5) S.logs.length=5; }
+
+/* ---------- 战报文字 ---------- */
+function battleText(res, aSide, aName, dSide, dName){
+  if(!res.defender) return sideName(aSide)+' '+aName+' 移动';
+  var A=sideName(aSide)+' '+aName, D=sideName(dSide)+' '+dName;
+  var r=res.battle.result, dd=res.defender, aa=res.attacker;
+  if(r==='attacker_wins'){
+    if(dd.kind==='flag') return A+' 扛了 '+D+'！';
+    if(dd.kind==='mine') return A+' 挖掉 '+D;
+    return A+' 吃掉 '+D;
+  }
+  if(r==='defender_wins'){
+    if(dd.kind==='mine') return A+' 撞雷阵亡';
+    return D+' 击败 '+A;
+  }
+  if(aa.kind==='bomb'||dd.kind==='bomb'){
+    if(dd.kind==='flag') return A+' 炸掉 '+D+'！';
+    return '炸弹！'+A+' 与 '+D+' 同归于尽';
+  }
+  return A+' 与 '+D+' 同归于尽';
+}
+
+/* ---------- 交互 ---------- */
+function computeHints(from){
+  var g=S.game, ns=E.neighbors(from), res=[];
+  for(var k=0;k<ns.length;k++){
+    var j=ns[k], d=g.board[j];
+    if(!d) res.push(j);
+    else if(d.revealed && d.side!==E.RED) res.push(j);
+  }
+  return res;
+}
+function onCell(i){
+  if(S.over || S.busy) return;
+  var g=S.game;
+  if(g.winner || g.turn!==E.RED) return;      /* 玩家执红，只在红方回合操作 */
+  var p=g.board[i];
+  if(!p){
+    if(S.sel!==null && S.hints.indexOf(i)>=0) doMove(S.sel,i);
+    else { S.sel=null; S.hints=[]; render(); }
+    return;
+  }
+  if(!p.revealed){ doFlip(i); return; }        /* 暗子 → 翻子 */
+  if(p.side===E.RED){
+    if(E.movablePiece(p)){ S.sel=i; S.hints=computeHints(i); sfx('sel'); render(); }
+    else { S.sel=null; S.hints=[]; render(); }
+  } else {
+    if(S.sel!==null && S.hints.indexOf(i)>=0) doMove(S.sel,i);
+    else { S.sel=null; S.hints=[]; render(); }
+  }
+}
+function doFlip(i){
+  var res=E.flip(S.game,i);
+  if(!res.ok) return false;
+  S.sel=null; S.hints=[];
+  pushLog('翻开 '+sideName(res.side)+' '+res.piece.type);
+  sfx('flip');
+  afterAction();
+  return true;
+}
+function doMove(from,to){
+  var a=S.game.board[from], d=S.game.board[to];
+  var aSide=a.side, aName=a.type, dSide=d?d.side:null, dName=d?d.type:'';
+  var isBoom=(a.kind==='bomb' || (d && d.kind==='bomb'));
+  var res=E.move(S.game,from,to);
+  if(!res.ok) return false;
+  S.sel=null; S.hints=[];
+  pushLog(battleText(res,aSide,aName,dSide,dName));
+  sfx(isBoom?'boom':(res.battle?'eat':'move'));
+  afterAction();
+  return true;
+}
+function afterAction(){
+  render(); save();
+  if(S.game.winner){ showOver(S.game.winner); return; }
+  maybeAI();
+}
+
+/* ---------- AI 应手（约 400ms 延迟，显示思考中） ---------- */
+function maybeAI(){
+  if(S.over) return;
+  if(S.game.winner){ showOver(S.game.winner); return; }
+  if(S.game.turn!==E.BLACK) return;
+  S.busy=true; render();
+  setTimeout(function(){ aiStep(); }, 400);
+}
+function aiStep(){
+  S.busy=false;
+  if(S.over || S.game.winner || S.game.turn!==E.BLACK){ render(); return; }
+  var act=E.aiMove(S.game);
+  if(!act){
+    S.game.winner=E.RED;
+    pushLog('黑方无子可动，红方胜');
+    render(); save(); showOver(E.RED); return;
+  }
+  if(act.type==='flip'){
+    var r=E.flip(S.game,act.idx);
+    if(r.ok) pushLog('黑方翻开 '+sideName(r.side)+' '+r.piece.type);
+  } else {
+    var a=S.game.board[act.from], d=S.game.board[act.to];
+    var aSide=a?a.side:E.BLACK, aName=a?a.type:'', dSide=d?d.side:null, dName=d?d.type:'';
+    var r2=E.move(S.game,act.from,act.to);
+    if(r2.ok) pushLog(battleText(r2,aSide,aName,dSide,dName));
+  }
+  sfx('ai');
+  render(); save();
+  if(S.game.winner){ showOver(S.game.winner); return; }
+  maybeAI();
+}
+
+/* ---------- 局面控制 ---------- */
+function hideOverlay(){ $('overlay').className='overlay hide'; }
+function showOver(w){
+  S.over=true; S.busy=false;
+  var t=$('ovTitle'), p=$('ovText');
+  if(w===E.RED){ t.textContent='红方胜！'; p.textContent='黑方军旗被扛或被炸，或黑方已无子可动。'; }
+  else if(w===E.BLACK){ t.textContent='黑方胜'; p.textContent='红方军旗失守，或你已认输。'; }
+  else { t.textContent='平局'; p.textContent='双方均无子可动。'; }
+  $('overlay').className='overlay';
+  sfx('over'); render();
+}
+function newGame(){
+  S.game=E.newGame();
+  S.sel=null; S.hints=[]; S.logs=[]; S.busy=false; S.over=false;
+  hideOverlay();
+  pushLog('红先手 · 点暗子翻棋，点己方明子走子');
+  render(); save();
+}
+function resign(){
+  if(S.over) return;
+  S.game.winner=E.BLACK;
+  pushLog('红方认输');
+  save(); showOver(E.BLACK);
+}
+
+/* ---------- 输入：格子同时支持 touchstart/touchend 与 mousedown，时间戳去重 ---------- */
+var lastTouch=0;
+function cellIndex(e){
+  var el=e.target;
+  while(el && el!==boardEl){
+    if(el.getAttribute){ var v=el.getAttribute('data-i'); if(v!==null) return parseInt(v,10); }
+    el=el.parentNode;
+  }
+  return -1;
+}
+boardEl.addEventListener('touchstart', function(e){
+  lastTouch=Date.now();
+  if(e.cancelable) e.preventDefault();
+}, false);
+boardEl.addEventListener('touchmove', function(e){ if(e.cancelable) e.preventDefault(); }, false);
+boardEl.addEventListener('touchend', function(e){
+  if(e.cancelable) e.preventDefault();
+  lastTouch=Date.now();
+  var i=cellIndex(e);
+  if(i>=0){ ensureAudio(); onCell(i); }
+}, false);
+boardEl.addEventListener('mousedown', function(e){
+  if(Date.now()-lastTouch<700) return;
+  var i=cellIndex(e);
+  if(i>=0){ ensureAudio(); onCell(i); }
+}, false);
+
+/* ---------- 顶栏 / 按钮 ---------- */
+$('ruleBtn').onclick=function(){
+  var r=$('rules'), hidden=r.className.indexOf('hide')>=0;
+  r.className=hidden?'rules':'rules hide';
+  this.className='chip'+(hidden?' on':'');
+  this.textContent=hidden?'收起':'规则';
+};
+var restartArmed=false;
+$('restartBtn').onclick=function(){
+  var self=this;
+  if(!restartArmed){
+    restartArmed=true; self.className='btn armed'; self.textContent='确定重开？';
+    setTimeout(function(){ restartArmed=false; self.className='btn'; self.textContent='重新开始'; },1800);
+    return;
+  }
+  restartArmed=false; self.className='btn'; self.textContent='重新开始';
+  newGame();
+};
+$('resignBtn').onclick=function(){ resign(); };
+$('ovBtn').onclick=function(){ newGame(); };
+
+window.addEventListener('resize', layout, false);
+window.addEventListener('orientationchange', function(){ setTimeout(layout,220); }, false);
+
+/* ---------- 启动 ---------- */
+if(!restore()){
+  S.game=E.newGame();
+  pushLog('红先手 · 点暗子翻棋，点己方明子走子');
+}
+if(S.game.winner){ S.over=true; showOver(S.game.winner); }
+else { hideOverlay(); }
+render();
+layout();
+setTimeout(layout,60);
+if(!S.over && S.game.turn===E.BLACK) maybeAI();
+
+/* 供自动化测试探针调用（不影响正常玩法） */
+window.__T = {
+  S:S, E:E, cells:cells,
+  game:function(){ return S.game; },
+  onCell:onCell, doFlip:doFlip, doMove:doMove, aiStep:aiStep, maybeAI:maybeAI,
+  newGame:newGame, resign:resign, render:render, layout:layout,
+  computeHints:computeHints, battleText:battleText, pushLog:pushLog,
+  showOver:showOver, hideOverlay:hideOverlay, save:save, restore:restore,
+  sideName:sideName
+};
+})();
+</script>
+</body>
+</html>

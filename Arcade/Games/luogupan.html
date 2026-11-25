@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#141414">
+<title>京剧戏曲锣鼓盘 · 本地版</title>
+<style>
+:root{
+  --body-bg:#0d0d0f; --bg:#141416; --panel:#1b1b1e; --pad:#242427;
+  --pad-hi:#3b3b40; --line:#3a3a3e; --txt:#f4f4f6; --sub:#8b8b93;
+  --accent:#d9ab5c; --ok:#5fc98a; --shadow:rgba(0,0,0,.45);
+}
+html[data-theme="light"]{
+  --body-bg:#e9e9ee; --bg:#f5f5f8; --panel:#ffffff; --pad:#fbfbfd;
+  --pad-hi:#e7e7ee; --line:#d9d9e1; --txt:#1c1c20; --sub:#77777f;
+  --accent:#a4771f; --ok:#1f9d5b; --shadow:rgba(0,0,0,.12);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--body-bg); color:var(--txt);
+  font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC",system-ui,sans-serif;
+  -webkit-user-select:none;user-select:none;
+}
+.app{max-width:460px;margin:0 auto;padding:0 12px 26px;background:var(--bg);min-height:100vh}
+@media(min-width:600px){
+  body{padding:18px 0}
+  .app{margin:0 auto;border-radius:24px;padding:8px 16px 22px;box-shadow:0 20px 60px var(--shadow);min-height:auto}
+}
+header{height:56px;display:flex;align-items:center;gap:8px}
+.title{font-size:17px;font-weight:600;letter-spacing:1px;flex:1;text-align:center}
+.hbtn{
+  border:1px solid var(--line);background:var(--pad);color:var(--sub);
+  border-radius:9px;font-size:11px;padding:6px 9px;cursor:pointer;white-space:nowrap;
+  font-family:inherit;line-height:1;
+}
+.hbtn:hover{color:var(--txt)}
+.hbtn.on{color:var(--accent);border-color:var(--accent)}
+.status{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ok);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok)}
+
+.pad{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  grid-template-rows:repeat(7,var(--rh));gap:8px;
+  --rh:clamp(62px,9.7vh,92px);
+}
+.pad-btn{
+  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--pad);border:1px solid var(--line);border-radius:14px;color:var(--txt);
+  cursor:pointer;touch-action:manipulation;overflow:hidden;
+  transition:background .07s,transform .07s,box-shadow .07s;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+}
+.pad-btn .zi{font-size:33px;font-weight:700;line-height:1.05;font-family:"STKaiti","KaiTi","Kaiti SC",serif}
+.pad-btn.big .zi{font-size:46px}
+.pad-btn .inst{font-size:11px;color:var(--sub);margin-top:9px;letter-spacing:2px}
+.pad-btn .kbd{position:absolute;top:7px;right:9px;font-size:10px;color:var(--sub);opacity:.62;font-family:monospace}
+.pad-btn.hide-kbd .kbd{display:none}
+.pad-btn.active{background:var(--pad-hi);transform:scale(.965);box-shadow:inset 0 0 0 2px var(--accent)}
+.pad-btn.stop .zi{font-size:30px}
+.pad-btn.flash{background:var(--pad-hi);box-shadow:inset 0 0 0 2px var(--accent)}
+
+.tools{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.row{display:flex;align-items:center;gap:7px;margin-bottom:9px;flex-wrap:wrap}
+.row:last-child{margin-bottom:0}
+.tag{font-size:11px;color:var(--sub);letter-spacing:1px;margin-right:2px}
+.tbtn{
+  border:1px solid var(--line);background:var(--pad);color:var(--txt);
+  border-radius:9px;font-size:12px;padding:7px 10px;cursor:pointer;font-family:inherit;line-height:1;
+}
+.tbtn:hover{border-color:var(--accent)}
+.tbtn.on{color:var(--accent);border-color:var(--accent)}
+.tbtn.rec{color:#ff6b6b}
+.tbtn:disabled{opacity:.4;cursor:default}
+select{
+  flex:1;min-width:130px;border:1px solid var(--line);background:var(--pad);color:var(--txt);
+  border-radius:9px;font-size:12px;padding:7px 8px;font-family:inherit;outline:none;
+}
+input[type=range]{flex:1;min-width:100px;accent-color:var(--accent);height:20px}
+.note{font-size:11px;color:var(--sub);line-height:1.7;margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.note b{color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <button class="hbtn" id="themeBtn" title="切换深浅色">☾ 深色</button>
+    <div class="title">京剧戏曲锣鼓盘</div>
+    <div class="status"><span class="dot"></span>离线</div>
+    <button class="hbtn on" id="kbdBtn" title="显示/隐藏键盘按键提示">键盘</button>
+  </header>
+
+  <div class="pad" id="pad"></div>
+
+  <div class="tools">
+    <div class="row">
+      <span class="tag">音量</span>
+      <input type="range" id="vol" min="0" max="100" value="80">
+      <span class="tag" id="volTxt">80</span>
+    </div>
+    <div class="row">
+      <span class="tag">锣鼓经</span>
+      <select id="pattern"></select>
+      <button class="tbtn" id="playPat">▶ 演奏</button>
+      <button class="tbtn" id="loopPat">⟳ 循环</button>
+    </div>
+    <div class="row">
+      <span class="tag">练习</span>
+      <button class="tbtn" id="recBtn">● 录制</button>
+      <button class="tbtn" id="playRec" disabled>▶ 回放</button>
+      <button class="tbtn" id="loopRec" disabled>⟳ 循环</button>
+      <button class="tbtn" id="clearRec" disabled>✕ 清空</button>
+      <button class="tbtn" id="stopAll">■ 停止</button>
+    </div>
+    <div class="note">
+      <b>纯本地 · 无广告 · 无网络请求</b>：所有音色由浏览器实时合成，不加载任何外部音频、脚本或字体，不上传任何数据。<br>
+      点击鼓键发声，可多指/多键同时敲击；「乙」为停止全部声音。键盘按键见各键右上角。把本文件复制到手机或其他电脑，用浏览器打开即可离线使用；手机浏览器可「添加到主屏幕」当独立应用。
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ---------- 鼓键布局：完全按原图 4 列 × 7 行还原 ---------- */
+const PADS = [
+  {id:'zha',   zi:'扎', inst:'板',    key:'Q', r:1,c:1,rs:2, sound:'zha'},
+  {id:'dong',  zi:'咚', inst:'大堂鼓', key:'W', r:1,c:2,cs:2, big:true, sound:'dong'},
+  {id:'tong',  zi:'嗵', inst:'小堂鼓', key:'E', r:1,c:4,rs:2, sound:'tong'},
+  {id:'ba',    zi:'八', inst:'板鼓',   key:'S', r:2,c:2,rs:2, sound:'ba'},
+  {id:'da',    zi:'大', inst:'板鼓',   key:'D', r:2,c:3,rs:2, sound:'da'},
+  {id:'beng',  zi:'崩', inst:'板鼓',   key:'A', r:3,c:1, sound:'beng'},
+  {id:'duo',   zi:'多', inst:'板鼓',   key:'F', r:3,c:4, sound:'duo'},
+  {id:'za',    zi:'匝', inst:'小锣',   key:'Z', r:4,c:1, sound:'za'},
+  {id:'tai',   zi:'台', inst:'小锣',   key:'X', r:4,c:2,cs:2, sound:'tai'},
+  {id:'ling',  zi:'令', inst:'小锣',   key:'C', r:4,c:4, sound:'ling'},
+  {id:'cang',  zi:'仓', inst:'大锣',   key:'R', r:5,c:1,cs:2, sound:'cang'},
+  {id:'cai',   zi:'才', inst:'铙钹',   key:'T', r:5,c:3,cs:2, sound:'cai'},
+  {id:'kuang', zi:'匡', inst:'大锣',   key:'V', r:6,c:1,rs:2, sound:'kuang'},
+  {id:'qing',  zi:'顷', inst:'大锣',   key:'B', r:6,c:2, sound:'qing'},
+  {id:'qi',    zi:'七', inst:'铙钹',   key:'N', r:6,c:3, sound:'qi'},
+  {id:'pu',    zi:'扑', inst:'铙钹',   key:'M', r:6,c:4, sound:'pu'},
+  {id:'gong',  zi:'宫', inst:'大锣',   key:'G', r:7,c:2, sound:'gong'},
+  {id:'ding',  zi:'叮', inst:'摇铃',   key:'H', r:7,c:3, sound:'ding'},
+  {id:'yi',    zi:'乙', inst:'停止',   key:'空格', r:7,c:4, sound:'stop', isStop:true}
+];
+
+/* ---------- 音频引擎：Web Audio 程序化合成，无任何外部资源 ---------- */
+const AC = window.AudioContext || window.webkitAudioContext;
+let ctx = null, master = null, noiseBuf = null, volume = 0.8;
+const live = new Set();
+
+function ensureAudio(){
+  if(!AC) return null;
+  if(!ctx){
+    ctx = new AC();
+    master = ctx.createGain(); master.gain.value = volume;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.knee.value = 14; comp.ratio.value = 6;
+    comp.attack.value = 0.002; comp.release.value = 0.18;
+    master.connect(comp); comp.connect(ctx.destination);
+    noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate*2), ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+  }
+  if(ctx.state === 'suspended') ctx.resume();
+  return ctx.currentTime + 0.005;
+}
+function track(src,g){
+  const item = {src,g};
+  live.add(item);
+  src.onended = () => live.delete(item);
+}
+function env(g,t,peak,atk,dec){
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(Math.max(peak,0.0002), t+atk);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+atk+dec);
+}
+function tone(o){
+  const t = o.t + (o.delay||0);
+  const osc = ctx.createOscillator(); osc.type = o.type||'sine';
+  osc.frequency.setValueAtTime(o.f,t);
+  if(o.f2) osc.frequency.exponentialRampToValueAtTime(Math.max(o.f2,1), t+(o.glide||o.dur));
+  const g = ctx.createGain();
+  env(g,t,o.gain==null?0.2:o.gain,o.atk==null?0.003:o.atk,o.dur);
+  osc.connect(g); g.connect(master);
+  osc.start(t); osc.stop(t+o.dur+(o.atk==null?0.003:o.atk)+0.06);
+  track(osc,g);
+}
+function noise(o){
+  const t = o.t + (o.delay||0);
+  const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+  const flt = ctx.createBiquadFilter();
+  flt.type = o.type||'bandpass'; flt.frequency.setValueAtTime(o.freq||2000,t);
+  flt.Q.value = o.q==null?1:o.q;
+  if(o.freq2) flt.frequency.exponentialRampToValueAtTime(Math.max(o.freq2,20),t+o.dur);
+  const g = ctx.createGain();
+  env(g,t,o.gain==null?0.2:o.gain,o.atk==null?0.002:o.atk,o.dur);
+  src.connect(flt); flt.connect(g); g.connect(master);
+  src.start(t); src.stop(t+o.dur+0.07);
+  track(src,g);
+}
+/* 木质板鼓：短噪声瞬态 + 一点音高 */
+function wood(t,nf,tf,dur,gain){
+  noise({t, freq:nf, q:1.8, dur:dur, gain:gain});
+  tone({t, f:tf, f2:tf*0.72, glide:dur, dur:dur*0.8, gain:0.2, type:'triangle'});
+}
+/* 金属乐器：一组非谐泛音 + 敲击噪声，glide>1 上扬（小锣），<1 下滑（大锣） */
+function metal(t,o){
+  const dur = o.dur||0.5, gain = o.gain||0.3, glide = o.glide||1;
+  o.r.forEach((r,i)=>{
+    const f = o.f*r;
+    tone({t, f, f2:f*glide, glide:dur*0.85,
+          dur:Math.max(0.06,dur*(1-i*0.065)),
+          gain:gain/(1+i*0.9), atk:0.002});
+  });
+  if(o.nf) noise({t, type:o.damp?'lowpass':'bandpass', freq:o.nf, q:0.8,
+                  dur:Math.min(0.14,dur*0.4), gain:o.ng||0.12});
+}
+const R_SMALL = [1,1.51,2.14,2.97,4.16];
+const R_BIG   = [1,1.34,1.82,2.41,3.16,4.4,5.8];
+const R_CYM   = [1,1.7,2.61,3.92,5.4];
+
+const SOUNDS = {
+  /* 板 / 鼓 */
+  zha: t=>{ noise({t,freq:2600,q:1.2,dur:0.045,gain:0.34});
+            tone({t,f:1100,f2:700,glide:0.03,dur:0.035,gain:0.16,type:'triangle'}); },
+  dong:t=>{ tone({t,f:135,f2:58,glide:0.18,dur:0.55,gain:0.72});
+            tone({t,f:84,f2:60,glide:0.1,dur:0.4,gain:0.22});
+            noise({t,type:'lowpass',freq:420,dur:0.07,gain:0.32}); },
+  tong:t=>{ tone({t,f:250,f2:150,glide:0.09,dur:0.3,gain:0.55});
+            noise({t,type:'bandpass',freq:900,q:0.8,dur:0.05,gain:0.28}); },
+  beng:t=>wood(t,2100,740,0.075,0.46),
+  ba:  t=>wood(t,1650,570,0.070,0.42),
+  da:  t=>wood(t,1250,430,0.095,0.54),
+  duo: t=>wood(t,900,330,0.105,0.38),
+  /* 小锣 */
+  tai: t=>metal(t,{f:560,r:R_SMALL,dur:0.60,glide:1.22,gain:0.30,nf:4200,ng:0.10}),
+  ling:t=>metal(t,{f:660,r:R_SMALL,dur:0.45,glide:1.04,gain:0.25,nf:4800,ng:0.09}),
+  za:  t=>metal(t,{f:520,r:R_SMALL,dur:0.17,glide:0.88,gain:0.22,nf:1500,ng:0.13,damp:true}),
+  /* 大锣 */
+  cang:t=>metal(t,{f:190,r:R_BIG,dur:1.20,glide:0.88,gain:0.32,nf:2600,ng:0.17}),
+  kuang:t=>{ metal(t,{f:155,r:R_BIG,dur:1.45,glide:0.80,gain:0.36,nf:1800,ng:0.20});
+             tone({t,f:96,f2:70,glide:0.25,dur:0.5,gain:0.20}); },
+  qing:t=>metal(t,{f:230,r:R_BIG,dur:0.50,glide:0.90,gain:0.23,nf:2200,ng:0.10}),
+  gong:t=>metal(t,{f:170,r:R_BIG,dur:0.32,glide:0.82,gain:0.26,nf:900,ng:0.12,damp:true}),
+  /* 铙钹 */
+  cai:t=>{ noise({t,type:'bandpass',freq:4700,q:0.6,dur:0.44,gain:0.30});
+           metal(t,{f:900,r:R_CYM,dur:0.38,glide:0.96,gain:0.14}); },
+  qi: t=>{ noise({t,type:'highpass',freq:3600,dur:0.32,gain:0.30});
+           metal(t,{f:1250,r:R_CYM,dur:0.25,glide:1.01,gain:0.12}); },
+  pu: t=>{ noise({t,type:'lowpass',freq:1400,dur:0.14,gain:0.38});
+           tone({t,f:320,f2:200,glide:0.1,dur:0.1,gain:0.15,type:'triangle'}); },
+  /* 摇铃 */
+  ding:t=>{ [1760,2640,3520,4700].forEach((f,i)=>
+              tone({t,f,f2:f*1.004,glide:1.0,dur:1.15-i*0.16,gain:0.15/(1+i*0.5)}));
+            noise({t,type:'highpass',freq:5200,dur:0.03,gain:0.10}); }
+};
+
+/* ---------- 交互 ---------- */
+const padEl = document.getElementById('pad');
+const els = {}, keyMap = {};
+PADS.forEach(p=>{
+  const b = document.createElement('div');
+  b.className = 'pad-btn' + (p.big?' big':'') + (p.isStop?' stop':'');
+  b.style.gridRow = p.r + ' / span ' + (p.rs||1);
+  b.style.gridColumn = p.c + ' / span ' + (p.cs||1);
+  b.innerHTML = '<div class="kbd">'+(p.key==='空格'?'SPACE':p.key)+'</div>'+
+                '<div class="zi">'+p.zi+'</div><div class="inst">'+p.inst+'</div>';
+  const onDown = e=>{ if(e.cancelable) e.preventDefault(); trigger(p.id); };
+  if('PointerEvent' in window){
+    b.addEventListener('pointerdown', onDown);
+  }else{
+    b.addEventListener('touchstart', onDown, {passive:false});
+    b.addEventListener('mousedown', onDown);
+  }
+  padEl.appendChild(b);
+  els[p.id] = b;
+  keyMap[p.key==='空格'?' ':p.key.toLowerCase()] = p.id;
+});
+function flash(id){
+  const el = els[id]; if(!el) return;
+  el.classList.add('flash');
+  clearTimeout(el._ft);
+  el._ft = setTimeout(()=>el.classList.remove('flash'),110);
+}
+function stopAll(keepLoops){
+  if(ctx){
+    const n = ctx.currentTime;
+    live.forEach(({src,g})=>{
+      try{
+        g.gain.cancelScheduledValues(n);
+        g.gain.setValueAtTime(Math.max(g.gain.value,0.0001),n);
+        g.gain.linearRampToValueAtTime(0.0001,n+0.025);
+        src.stop(n+0.04);
+      }catch(e){}
+    });
+    live.clear();
+  }
+  clearTimers();
+  playingPat = false;
+  document.getElementById('playPat').classList.remove('on');
+  if(!keepLoops){
+    loopPattern = false;
+    document.getElementById('loopPat').classList.remove('on');
+  }
+}
+const SOUND_BY_ID = {};
+PADS.forEach(p=>{ SOUND_BY_ID[p.id] = p.sound; });
+function trigger(id, opt){
+  opt = opt||{};
+  flash(id);
+  if(els[id]) els[id].classList.add('active');
+  if(els[id]) setTimeout(()=>els[id].classList.remove('active'),90);
+  if(id === 'yi'){ stopAll(); return; }
+  const t = ensureAudio();
+  const sid = SOUND_BY_ID[id];
+  if(t !== null && SOUNDS[sid]) SOUNDS[sid](t);
+  if(recording && !opt.noRec) rec.push({id, t:performance.now()-recStart});
+}
+
+/* 键盘 */
+document.addEventListener('keydown', e=>{
+  if(e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
+  if(e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+  const k = e.key === ' ' ? ' ' : (e.key||'').toLowerCase();
+  if(keyMap[k]){ e.preventDefault(); trigger(keyMap[k]); }
+});
+
+/* ---------- 锣鼓经预设（简化练习节奏，可自行录制更准确的点子） ---------- */
+function seq(pairs){ let beat=0; return pairs.map(([id,dt])=>{ beat += dt; return {id,beat}; }); }
+const PATTERNS = [
+  {name:'四击头（简化）', bpm:104, seq:seq([['cang',0],['cai',1],['cang',1],['cai',1],['cang',1],['cai',1],['cang',1],['cang',0.5]])},
+  {name:'急急风', bpm:168, seq:seq([['cang',0],['cai',.5],['cang',.5],['cai',.5],['cang',.5],['cai',.5],['cang',.5],['cai',.5],['cang',.5],['cai',.5],['cang',.5]])},
+  {name:'慢长锤', bpm:76, seq:seq([['cang',0],['qi',1],['tai',1],['qi',1],['cang',1],['qi',1],['tai',1],['qi',1],['cang',1]])},
+  {name:'冲头（渐快）', bpm:120, seq:seq([['cang',0],['cai',1],['cang',.85],['cai',.7],['cang',.6],['cai',.5],['cang',.45]])},
+  {name:'五击头', bpm:100, seq:seq([['tai',0],['cang',1],['cai',1],['cang',1],['cang',.75]])},
+  {name:'小锣单点', bpm:132, seq:seq([['tai',0],['ling',1],['tai',1],['ling',1],['tai',1],['ling',.5],['tai',.5]])}
+];
+const patSel = document.getElementById('pattern');
+PATTERNS.forEach((p,i)=>{
+  const o = document.createElement('option'); o.value = i; o.textContent = p.name; patSel.appendChild(o);
+});
+let timers = [], playingPat = false, loopPattern = false;
+function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
+function playPattern(){
+  stopAll(true);
+  const p = PATTERNS[+patSel.value], ms = 60000/p.bpm;
+  playingPat = true;
+  document.getElementById('playPat').classList.add('on');
+  p.seq.forEach(s=>{
+    timers.push(setTimeout(()=>trigger(s.id,{noRec:true}), s.beat*ms));
+  });
+  const total = (p.seq[p.seq.length-1].beat + 1.2)*ms;
+  timers.push(setTimeout(()=>{
+    playingPat = false;
+    document.getElementById('playPat').classList.remove('on');
+    if(loopPattern) playPattern();
+  }, total));
+}
+document.getElementById('playPat').onclick = ()=>{ if(playingPat){ stopAll(); } else { loopPattern=false; document.getElementById('loopPat').classList.remove('on'); playPattern(); } };
+document.getElementById('loopPat').onclick = e=>{
+  loopPattern = !loopPattern;
+  e.currentTarget.classList.toggle('on',loopPattern);
+  if(loopPattern){ if(!playingPat) playPattern(); }
+  else if(!playingPat) stopAll();
+};
+document.getElementById('stopAll').onclick = ()=>{ loopPattern=false; document.getElementById('loopPat').classList.remove('on'); stopAll(); flash('yi'); };
+
+/* ---------- 录制 / 回放 ---------- */
+let recording = false, rec = [], recStart = 0, recLoop = false, recPlaying = false;
+const recBtn = document.getElementById('recBtn'), playRecBtn = document.getElementById('playRec'),
+      clearRecBtn = document.getElementById('clearRec'), loopRecBtn = document.getElementById('loopRec');
+recBtn.onclick = ()=>{
+  if(!recording){
+    stopAll();
+    rec = []; recording = true; recStart = performance.now();
+    recBtn.textContent = '■ 结束'; recBtn.classList.add('rec','on');
+    playRecBtn.disabled = true; clearRecBtn.disabled = true; loopRecBtn.disabled = true;
+  }else{
+    recording = false;
+    recBtn.textContent = '● 录制'; recBtn.classList.remove('rec','on');
+    const has = rec.length>0;
+    playRecBtn.disabled = !has; clearRecBtn.disabled = !has; loopRecBtn.disabled = !has;
+  }
+};
+function playRecording(withLoop){
+  if(!rec.length) return;
+  stopAll();
+  recPlaying = true; playRecBtn.classList.add('on');
+  clearTimers();
+  rec.forEach(e=> timers.push(setTimeout(()=>trigger(e.id,{noRec:true}), e.t)) );
+  const total = rec[rec.length-1].t + 700;
+  timers.push(setTimeout(()=>{
+    recPlaying = false; playRecBtn.classList.remove('on');
+    if(recLoop && withLoop) playRecording(true);
+  }, total));
+}
+playRecBtn.onclick = ()=>{ recLoop=false; loopRecBtn.classList.remove('on'); playRecording(false); };
+loopRecBtn.onclick = e=>{
+  recLoop = !recLoop; e.currentTarget.classList.toggle('on',recLoop);
+  if(recLoop) playRecording(true); else if(recPlaying) stopAll();
+};
+clearRecBtn.onclick = ()=>{
+  stopAll(); rec = []; recLoop = false; loopRecBtn.classList.remove('on');
+  playRecBtn.disabled = true; clearRecBtn.disabled = true; loopRecBtn.disabled = true;
+};
+
+/* ---------- 设置 ---------- */
+const volEl = document.getElementById('vol'), volTxt = document.getElementById('volTxt');
+volEl.oninput = ()=>{
+  volume = +volEl.value/100; volTxt.textContent = volEl.value;
+  if(master) master.gain.setTargetAtTime(volume, ctx.currentTime, 0.01);
+};
+document.getElementById('kbdBtn').onclick = e=>{
+  const on = !e.currentTarget.classList.contains('on');
+  e.currentTarget.classList.toggle('on',on);
+  Object.keys(els).forEach(k=>els[k].classList.toggle('hide-kbd',!on));
+};
+document.getElementById('themeBtn').onclick = e=>{
+  const light = document.documentElement.getAttribute('data-theme') === 'light';
+  document.documentElement.setAttribute('data-theme', light?'dark':'light');
+  e.currentTarget.textContent = light?'☾ 深色':'☀ 浅色';
+};
+/* 安卓 WebView 内没有实体键盘，默认隐藏按键角标 */
+if(/;\s*wv\)/i.test(navigator.userAgent)) document.getElementById('kbdBtn').click();
+</script>
+</body>
+</html>

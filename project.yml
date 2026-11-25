@@ -1,0 +1,28 @@
+name: Arcade
+options:
+  bundleIdPrefix: com.workbuddy
+  deploymentTarget:
+    iOS: "12.0"
+
+targets:
+  Arcade:
+    type: application
+    platform: iOS
+    deploymentTarget: "12.0"
+    sources:
+      - path: Arcade/AppDelegate.swift
+      - path: Arcade/RootViewController.swift
+      - path: Arcade/Base.lproj/LaunchScreen.storyboard
+      - path: Arcade/Games
+        type: folder
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.workbuddy.arcade
+      PRODUCT_NAME: Arcade
+      IPHONEOS_DEPLOYMENT_TARGET: "12.0"
+      TARGETED_DEVICE_FAMILY: "2"
+      SWIFT_VERSION: "5.0"
+      INFOPLIST_FILE: Arcade/Info.plist
+      LD_RUNPATH_SEARCH_PATHS: ["$(inherited)", "@executable_path/Frameworks"]
+      CODE_SIGNING_ALLOWED: NO
+      CODE_SIGNING_REQUIRED: NO
+      SKIP_INSTALL: NO

@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0e1117">
+<title>经典 8 球台球 · 本地版</title>
+<style>
+:root[data-theme="dark"]{
+  --bg:#0e1117; --panel:#181d27; --panel2:#202634; --line:#2b3444;
+  --txt:#eef3fa; --dim:#8c98ab; --accent:#5ad6c8; --felt:#0a6a38;
+  --key:#222a38; --keytxt:#dce6f4; --shadow:rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--txt)}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+     user-select:none;-webkit-user-select:none;touch-action:none;-webkit-touch-callout:none}
+#app{width:100%;height:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column;padding:6px 8px 5px}
+.topbar{display:flex;align-items:center;justify-content:space-between;flex:0 0 auto;padding:2px 2px 6px}
+.title{font-size:16px;font-weight:800;letter-spacing:1px;line-height:1.15}
+.title .sub{display:block;font-size:9px;font-weight:500;letter-spacing:2px;color:var(--dim);margin-top:2px}
+.tools{display:flex;gap:5px}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--dim);font-size:11px;
+      min-height:44px;padding:0 10px;border-radius:9px;line-height:1;cursor:pointer;white-space:nowrap}
+.chip.on{color:var(--accent);border-color:var(--accent)}
+.stats{display:flex;gap:6px;flex:0 0 auto;margin-bottom:5px}
+.stat{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 3px 5px;text-align:center}
+.stat label{display:block;font-size:9px;color:var(--dim);letter-spacing:1px}
+.stat b{display:block;font-size:15px;font-variant-numeric:tabular-nums;line-height:1.25;
+        overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stat.hl b{color:var(--accent)}
+#hudGroup{flex:0 0 auto;font-size:10px;color:var(--dim);text-align:center;padding:0 0 5px;letter-spacing:.3px;
+          overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:15px}
+.tablewrap{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;
+      background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative}
+#cv{display:block;touch-action:none}
+.ctrl{flex:0 0 auto;margin-top:6px}
+.prow{display:flex;align-items:center;gap:4px}
+.lab{font-size:10px;color:var(--dim);flex:0 0 auto}
+.val{font-size:12px;font-variant-numeric:tabular-nums;min-width:34px;text-align:center;color:var(--accent)}
+.sq{width:40px;height:44px;flex:0 0 40px;border:1px solid var(--line);border-radius:9px;background:var(--key);
+    color:var(--keytxt);font-size:17px;font-weight:800;cursor:pointer;line-height:1;display:flex;
+    align-items:center;justify-content:center}
+.sq:active{background:var(--accent);color:#06201d}
+.ptrack{position:relative;flex:1 1 auto;min-width:30px;height:44px;border:1px solid var(--line);
+        border-radius:9px;background:var(--key);overflow:hidden;cursor:pointer}
+.pfill{position:absolute;left:0;top:0;bottom:0;width:70%;background:linear-gradient(90deg,#2e8f7a,#5ad6c8);
+       border-radius:8px 0 0 8px;pointer-events:none}
+.brow{display:flex;gap:6px;margin-top:6px}
+.big{flex:1 1 auto;height:50px;border:0;border-radius:11px;font-size:15px;font-weight:800;
+     letter-spacing:2px;cursor:pointer}
+.shoot{background:var(--accent);color:#06201d}
+.shoot:active{background:#3fbfae}
+.rerack{flex:0 0 110px;background:var(--panel2);color:var(--keytxt);border:1px solid var(--line)}
+.rerack:active{background:var(--key)}
+.hint{flex:0 0 auto;text-align:center;font-size:9px;color:var(--dim);line-height:1.5;padding:5px 0 0;letter-spacing:.2px}
+.overlay{position:absolute;left:0;top:0;right:0;bottom:0;background:rgba(8,11,17,.84);
+         display:flex;align-items:center;justify-content:center;padding:14px;z-index:6}
+.overlay.hide{display:none}
+.card{width:100%;max-width:270px;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+      padding:18px 15px;text-align:center;box-shadow:0 12px 36px var(--shadow)}
+.card h1{margin:0 0 8px;font-size:20px;letter-spacing:1px}
+.card p{margin:0 0 14px;font-size:11px;line-height:1.75;color:var(--dim)}
+.bigbtn{width:100%;padding:12px 0;border:0;border-radius:10px;background:var(--accent);color:#06201d;
+        font-size:14px;font-weight:800;letter-spacing:2px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="title">经典 8 球台球<span class="sub">BILLIARDS · 纯本地版</span></div>
+    <div class="tools">
+      <button class="chip on" id="modePractice" type="button">单人练习</button>
+      <button class="chip" id="modePvp" type="button">双人对战</button>
+      <button class="chip on" id="soundBtn" type="button">♪ 音效</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat hl"><label>当前</label><b id="hudPlayer">玩家 1</b></div>
+    <div class="stat"><label>杆数</label><b id="hudShots">0</b></div>
+    <div class="stat"><label>进球</label><b id="hudPotted">0 : 0</b></div>
+    <div class="stat"><label>状态</label><b id="hudState">瞄准</b></div>
+  </div>
+  <div id="hudGroup">拖拽球桌瞄准 · 或调角度力度后按「击球」</div>
+
+  <div class="tablewrap" id="tablewrap">
+    <canvas id="cv"></canvas>
+    <div class="overlay hide" id="overlay">
+      <div class="card">
+        <h1 id="ovTitle">本局结束</h1>
+        <p id="ovText"></p>
+        <button class="bigbtn" id="ovBtn" type="button">再来一局</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <div class="prow">
+      <span class="lab">角度</span>
+      <button class="sq" id="angDown" type="button">−</button>
+      <b class="val" id="angVal">0°</b>
+      <button class="sq" id="angUp" type="button">+</button>
+      <span class="lab">力度</span>
+      <button class="sq" id="powerDown" type="button">−</button>
+      <div class="ptrack" id="powerTrack"><div class="pfill" id="powerFill"></div></div>
+      <button class="sq" id="powerUp" type="button">+</button>
+      <b class="val" id="powerVal">70%</b>
+    </div>
+    <div class="brow">
+      <button class="big shoot" id="shootBtn" type="button">击 球</button>
+      <button class="big rerack" id="rerackBtn" type="button">重新开球</button>
+    </div>
+  </div>
+  <div class="hint">从白球向反方向拖拽瞄准，松手击球　｜　角度/力度按钮在手机上更稳　｜　白球落袋、空杆、先碰对方球均犯规</div>
+</div>
+
+<!-- ============ 纯逻辑引擎（无 DOM 依赖，便于自动化断言测试） ============ -->
+<script id="engine">
+var E = (function(){
+  /* ---- 球桌常量（逻辑坐标，宽高比 2:1） ---- */
+  var W = 1000, H = 500;
+  var R = 11;                 /* 球半径 */
+  var POCKET_R = 22;          /* 袋口落袋判定半径 */
+  var POCKET_MOUTH = 30;      /* 库边袋口豁免范围 */
+  var WALL_LOSS = 0.82;       /* 库边反弹速度保留系数 */
+  var DECEL = 420;            /* 滚动摩擦匀减速（单位/秒²） */
+  var STOP_EPS = 3;           /* 低于该速度视为停止 */
+  var MAX_SPEED = 1500;       /* 满力初速（单位/秒） */
+  var DT = 1 / 240;           /* 物理固定子步长（秒） */
+  var HEAD_X = 250, FOOT_X = 720, FOOT_Y = 250;
+  var POCKETS = [[0,0],[W/2,0],[W,0],[0,H],[W/2,H],[W,H]];  /* 四角 + 中袋 */
+  var BALL_COLOR = {
+    0:'#f6f4ea',
+    1:'#e8b21e',2:'#1f4fc0',3:'#cf2020',4:'#6b2fa0',5:'#e07a12',6:'#15823f',7:'#7d2b17',
+    8:'#17181c',
+    9:'#e8b21e',10:'#1f4fc0',11:'#cf2020',12:'#6b2fa0',13:'#e07a12',14:'#15823f',15:'#7d2b17'
+  };
+
+  function groupOf(num){
+    if (num === 0) return 'cue';
+    if (num === 8) return 'eight';
+    if (num >= 1 && num <= 7) return 'solid';
+    return 'stripe';
+  }
+  function ballInfo(num){
+    return { color:BALL_COLOR[num] || '#ffffff', stripe:(num >= 9 && num <= 15), group:groupOf(num) };
+  }
+  function makeBall(num, x, y){
+    var inf = ballInfo(num);
+    return { num:num, x:x, y:y, vx:0, vy:0, pocketed:false,
+             color:inf.color, stripe:inf.stripe, group:inf.group };
+  }
+  function shuffle(a, rnd){
+    for (var i=a.length-1;i>0;i--){
+      var j = Math.floor(rnd() * (i+1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  /* ---- 开球摆位：标准三角形，8 号在中心，底角一全色一花色，白球在开球线 ---- */
+  function rack(rnd){
+    rnd = rnd || Math.random;
+    var gap = 0.7, st = 2*R + gap, dx = st * Math.sqrt(3)/2;
+    var pos = [], r, i, k;
+    for (r=0;r<5;r++) for (i=0;i<=r;i++)
+      pos.push({ x:FOOT_X + r*dx, y:FOOT_Y + (i - r/2)*st });
+    var apexIdx = 0, centerIdx = 4, cornerA = 10, cornerB = 14;
+
+    var sol = [2,3,4,5,6,7], str = [9,10,11,12,13,14,15];
+    shuffle(sol, rnd); shuffle(str, rnd);
+    var cornerSol = sol.shift();
+    var cornerStr = str.pop();
+    var rest = shuffle(sol.concat(str), rnd);
+    var nums = new Array(15);
+    nums[apexIdx] = 1;
+    nums[centerIdx] = 8;
+    nums[cornerA] = cornerSol;
+    nums[cornerB] = cornerStr;
+    var ri = 0;
+    for (k=0;k<15;k++) if (typeof nums[k] === 'undefined') nums[k] = rest[ri++];
+
+    var balls = [];
+    for (k=0;k<15;k++) balls.push(makeBall(nums[k], pos[k].x, pos[k].y));
+    balls.push(makeBall(0, HEAD_X, FOOT_Y));
+    return balls;
+  }
+
+  /* ---- 一杆事件收集器 ---- */
+  function newShotEvents(){
+    return { firstHit:null, pocketed:[], cueScratch:false };
+  }
+
+  /* ---- 等质量弹性球-球碰撞：法向冲量 + 位置修正防粘连/穿透 ---- */
+  function collidePair(a, b, ev){
+    if (a.pocketed || b.pocketed) return false;
+    var dx = b.x - a.x, dy = b.y - a.y;
+    var d2 = dx*dx + dy*dy, min = 2*R;
+    if (d2 >= min*min || d2 === 0) return false;
+    var d = Math.sqrt(d2), nx = dx/d, ny = dy/d;
+    var ov = (min - d) * 0.5 + 0.01;
+    a.x -= nx*ov; a.y -= ny*ov;
+    b.x += nx*ov; b.y += ny*ov;
+    var p = (a.vx - b.vx)*nx + (a.vy - b.vy)*ny;
+    if (p <= 0) return false;                 /* 正在分离，不重复施加冲量 */
+    a.vx -= p*nx; a.vy -= p*ny;
+    b.vx += p*nx; b.vy += p*ny;
+    if (ev && ev.firstHit === null){
+      if (a.num === 0 && b.num !== 0) ev.firstHit = b.num;
+      else if (b.num === 0 && a.num !== 0) ev.firstHit = a.num;
+    }
+    return true;
+  }
+
+  /* ---- 库边反弹：带能量损失；袋口附近豁免让球能滑入 ---- */
+  function holeX(x){
+    return x < POCKET_MOUTH || (W - x) < POCKET_MOUTH || Math.abs(x - W/2) < POCKET_MOUTH;
+  }
+  function holeY(y){
+    return y < POCKET_MOUTH || (H - y) < POCKET_MOUTH;
+  }
+  function bounceRails(b){
+    if (b.pocketed) return false;
+    var hit = false;
+    if (b.x < R && !holeY(b.y)){ b.x = R; b.vx = Math.abs(b.vx)*WALL_LOSS; hit = true; }
+    else if (b.x > W-R && !holeY(b.y)){ b.x = W-R; b.vx = -Math.abs(b.vx)*WALL_LOSS; hit = true; }
+    if (b.y < R && !holeX(b.x)){ b.y = R; b.vy = Math.abs(b.vy)*WALL_LOSS; hit = true; }
+    else if (b.y > H-R && !holeX(b.x)){ b.y = H-R; b.vy = -Math.abs(b.vy)*WALL_LOSS; hit = true; }
+    return hit;
+  }
+
+  /* ---- 滚动摩擦：匀减速，方向不变 ---- */
+  function applyFriction(b, dt){
+    if (b.pocketed) return;
+    var sp = Math.sqrt(b.vx*b.vx + b.vy*b.vy);
+    if (sp <= 0) return;
+    var ns = sp - DECEL*dt;
+    if (ns <= STOP_EPS){ b.vx = 0; b.vy = 0; }
+    else { var k = ns/sp; b.vx *= k; b.vy *= k; }
+  }
+
+  /* ---- 袋口落袋判定：球心进入任一袋口半径内 ---- */
+  function checkPocket(b){
+    if (b.pocketed) return -1;
+    for (var i=0;i<POCKETS.length;i++){
+      var p = POCKETS[i], dx = b.x - p[0], dy = b.y - p[1];
+      if (dx*dx + dy*dy < POCKET_R*POCKET_R) return i;
+    }
+    return -1;
+  }
+  function pocketBall(b, ev){
+    if (b.pocketed) return;
+    b.pocketed = true; b.vx = 0; b.vy = 0;
+    if (ev){
+      ev.pocketed.push(b.num);
+      if (b.num === 0) ev.cueScratch = true;
+    }
+  }
+
+  /* ---- 单步推进：推进/摩擦 → 落袋 → 库边 → 出界兜底 → 球球碰撞 ---- */
+  function step(balls, dt, ev){
+    var i, j, b, pass;
+    for (i=0;i<balls.length;i++){
+      b = balls[i];
+      if (b.pocketed) continue;
+      b.x += b.vx*dt; b.y += b.vy*dt;
+      applyFriction(b, dt);
+    }
+    for (i=0;i<balls.length;i++){
+      b = balls[i];
+      if (b.pocketed) continue;
+      if (checkPocket(b) >= 0) pocketBall(b, ev);
+      else bounceRails(b);
+    }
+    for (i=0;i<balls.length;i++){
+      b = balls[i];
+      if (b.pocketed) continue;
+      if (b.x < -R || b.x > W+R || b.y < -R || b.y > H+R) pocketBall(b, ev);
+    }
+    for (pass=0;pass<2;pass++){
+      for (i=0;i<balls.length;i++) for (j=i+1;j<balls.length;j++)
+        collidePair(balls[i], balls[j], (pass === 0 ? ev : null));
+    }
+  }
+  function allStopped(balls){
+    for (var i=0;i<balls.length;i++){
+      var b = balls[i];
+      if (b.pocketed) continue;
+      if (b.vx !== 0 || b.vy !== 0) return false;
+    }
+    return true;
+  }
+  function anyMoving(balls){ return !allStopped(balls); }
+
+  /* ---- 击球 ---- */
+  function aimVector(deg){
+    var a = deg * Math.PI / 180;
+    return { x:Math.cos(a), y:Math.sin(a) };
+  }
+  function speedFor(power){
+    if (power < 0) power = 0;
+    if (power > 1) power = 1;
+    return power * MAX_SPEED;
+  }
+  function shotCue(balls, deg, power){
+    var v = aimVector(deg), s = speedFor(power);
+    for (var i=0;i<balls.length;i++) if (balls[i].num === 0 && !balls[i].pocketed){
+      balls[i].vx = v.x*s; balls[i].vy = v.y*s;
+      return balls[i];
+    }
+    return null;
+  }
+
+  /* ---- 瞄准预测：射线与球（半径 2R）相交，返回最近命中与目标球出球方向 ---- */
+  function firstBallAlong(balls, ox, oy, dx, dy){
+    var best = null, bestT = Infinity, min = 2*R, rr = min*min, i, b;
+    for (i=0;i<balls.length;i++){
+      b = balls[i];
+      if (b.pocketed || b.num === 0) continue;
+      var ocx = b.x - ox, ocy = b.y - oy;
+      var proj = ocx*dx + ocy*dy;
+      if (proj < 0) continue;
+      var d2 = ocx*ocx + ocy*ocy - proj*proj;
+      if (d2 > rr) continue;
+      var t = proj - Math.sqrt(rr - d2);
+      if (t < 0) t = 0;
+      if (t < bestT){ bestT = t; best = b; }
+    }
+    if (!best) return null;
+    var hx = ox + bestT*dx, hy = oy + bestT*dy;
+    var gx = best.x - hx, gy = best.y - hy;
+    var gl = Math.sqrt(gx*gx + gy*gy) || 1;
+    return { ball:best, t:bestT, x:hx, y:hy, objX:gx/gl, objY:gy/gl };
+  }
+
+  /* ---- 8 球规则状态机（纯逻辑） ---- */
+  function initRule(mode){
+    return {
+      mode:mode, current:0, owners:[null, null], open:true, pocketed:{},
+      winner:null, gameOver:false, shots:[0,0], potted:[0,0], last:''
+    };
+  }
+  function groupRemaining(rule, g){
+    var lo, hi, n, c = 0;
+    if (g === 'solid'){ lo = 1; hi = 7; } else { lo = 9; hi = 15; }
+    for (n=lo;n<=hi;n++) if (!rule.pocketed[n]) c++;
+    return c;
+  }
+  function groupOfPlayer(rule, p){ return rule.owners[p]; }
+  function switchTo(rule, p){ rule.current = p; }
+
+  function resolveShot(rule, ev){
+    var p = rule.current, i, num;
+    var res = { foul:false, switchPlayer:false, winner:null,
+                groupAssigned:null, pottedOwn:0, message:'', gameOver:false };
+    rule.shots[p]++;
+    for (i=0;i<ev.pocketed.length;i++) rule.pocketed[ev.pocketed[i]] = true;
+    var eightPotted = false;
+    for (i=0;i<ev.pocketed.length;i++) if (ev.pocketed[i] === 8) eightPotted = true;
+
+    /* 单人练习：只统计杆数与进球数，不分组、不换人、不判胜负 */
+    if (rule.mode === 'practice'){
+      var cnt = 0;
+      for (i=0;i<ev.pocketed.length;i++){
+        num = ev.pocketed[i];
+        if (num !== 0 && num !== 8) cnt++;
+      }
+      rule.potted[p] += cnt;
+      res.pottedOwn = cnt;
+      res.foul = ev.cueScratch;
+      res.message = ev.cueScratch ? '白球落袋 · 已重置' : (cnt > 0 ? ('进球 +' + cnt) : '未进球');
+      rule.last = res.message;
+      return res;
+    }
+
+    /* 双人对战：犯规判定 */
+    var foul = false, foulMsg = '';
+    if (ev.cueScratch){ foul = true; foulMsg = '白球落袋'; }
+    else if (ev.firstHit === null){ foul = true; foulMsg = '空杆 · 未碰任何球'; }
+    else if (!rule.open){
+      var myG = rule.owners[p];
+      var mustHit = (groupRemaining(rule, myG) <= 0) ? 8 : myG;
+      var hitG = groupOf(ev.firstHit);
+      if (mustHit === 8){ if (ev.firstHit !== 8){ foul = true; foulMsg = '应先碰 8 号球'; } }
+      else if (hitG !== myG){ foul = true; foulMsg = '先碰到对方球'; }
+    }
+
+    /* 8 号球：清完己方 7 球后合法打进获胜，否则击球者判负 */
+    if (eightPotted){
+      var mg = rule.owners[p];
+      var cleared = (mg !== null) && (groupRemaining(rule, mg) <= 0);
+      if (!foul && cleared && !rule.open){
+        res.winner = p; res.gameOver = true; rule.winner = p; rule.gameOver = true;
+        res.message = '打进 8 号 · 玩家' + (p+1) + ' 获胜！';
+      } else {
+        res.winner = 1-p; res.gameOver = true; rule.winner = 1-p; rule.gameOver = true;
+        res.foul = true;
+        res.message = '8 号提前落袋 · 玩家' + (p+1) + ' 判负';
+      }
+      rule.last = res.message;
+      return res;
+    }
+    if (foul){
+      res.foul = true; res.switchPlayer = true;
+      res.message = '犯规：' + foulMsg + ' · 换人';
+      switchTo(rule, 1-p);
+      rule.last = res.message;
+      return res;
+    }
+
+    /* 合法杆：统计落袋目标球、决定分组与续杆 */
+    var own = 0, firstGroup = null;
+    for (i=0;i<ev.pocketed.length;i++){
+      num = ev.pocketed[i];
+      if (num === 0 || num === 8) continue;
+      if (firstGroup === null) firstGroup = groupOf(num);
+      own++;
+    }
+    res.pottedOwn = own;
+    if (rule.open && own > 0 && firstGroup !== null){
+      rule.open = false;
+      rule.owners[p] = firstGroup;
+      rule.owners[1-p] = (firstGroup === 'solid' ? 'stripe' : 'solid');
+      res.groupAssigned = firstGroup;
+    }
+    var keep = false;
+    if (res.groupAssigned) keep = true;
+    else if (own > 0){
+      var myG3 = rule.owners[p];
+      for (i=0;i<ev.pocketed.length;i++){
+        num = ev.pocketed[i];
+        if (num !== 0 && num !== 8 && groupOf(num) === myG3){ keep = true; break; }
+      }
+    }
+    for (i=0;i<ev.pocketed.length;i++){
+      num = ev.pocketed[i];
+      if (num !== 0 && num !== 8 && rule.owners[p] === groupOf(num)) rule.potted[p]++;
+    }
+    if (keep){
+      res.switchPlayer = false;
+      res.message = own > 0 ? ('进球 +' + own + ' · 继续击球') : '继续击球';
+    } else {
+      res.switchPlayer = true;
+      switchTo(rule, 1-p);
+      res.message = own > 0 ? '进球但未续杆 · 换人' : '未进球 · 换人';
+    }
+    rule.last = res.message;
+    return res;
+  }
+
+  return {
+    W:W, H:H, R:R, POCKET_R:POCKET_R, POCKET_MOUTH:POCKET_MOUTH,
+    WALL_LOSS:WALL_LOSS, DECEL:DECEL, STOP_EPS:STOP_EPS, MAX_SPEED:MAX_SPEED,
+    DT:DT, HEAD_X:HEAD_X, FOOT_X:FOOT_X, FOOT_Y:FOOT_Y, POCKETS:POCKETS,
+    BALL_COLOR:BALL_COLOR,
+    groupOf:groupOf, ballInfo:ballInfo, makeBall:makeBall, shuffle:shuffle, rack:rack,
+    newShotEvents:newShotEvents, collidePair:collidePair, bounceRails:bounceRails,
+    applyFriction:applyFriction, checkPocket:checkPocket, pocketBall:pocketBall,
+    step:step, allStopped:allStopped, anyMoving:anyMoving,
+    aimVector:aimVector, speedFor:speedFor, shotCue:shotCue, firstBallAlong:firstBallAlong,
+    initRule:initRule, groupRemaining:groupRemaining, groupOfPlayer:groupOfPlayer,
+    resolveShot:resolveShot
+  };
+})();
+</script>
+
+<!-- ============ 界面 / 渲染 / 事件（ES5，兼容较老安卓 WebView） ============ -->
+<script>
+(function(){
+'use strict';
+var $ = function(id){ return document.getElementById(id); };
+var cv = $('cv'), ctx = cv.getContext('2d');
+var dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+var BORDER = 34, BW = E.W + 2*BORDER, BH = E.H + 2*BORDER;
+var view = { scale:1 };
+var AC = null, lastFrame = 0, MAX_DRAG = 300;
+
+var S = {
+  mode:'practice', balls:[], rule:null, phase:'aim', ev:null,
+  aimAngle:0, power:0.7, acc:0, sound:true, best:0
+};
+
+/* ---------- 本地存储（全部 try/catch，WebView 禁用存储也不崩） ---------- */
+function save(){
+  try{
+    localStorage.setItem('bili_settings', JSON.stringify({ mode:S.mode, sound:S.sound, best:S.best }));
+  }catch(e){}
+}
+function restore(){
+  try{
+    var raw = localStorage.getItem('bili_settings');
+    if (!raw) return;
+    var d = JSON.parse(raw);
+    if (!d) return;
+    if (d.mode === 'practice' || d.mode === 'pvp') S.mode = d.mode;
+    if (typeof d.sound === 'boolean') S.sound = d.sound;
+    if (typeof d.best === 'number' && d.best > 0) S.best = d.best;
+  }catch(e){}
+}
+
+/* ---------- 音效：Web Audio 实时合成，无音频文件 ---------- */
+function ensureAudio(){
+  if (!S.sound) return;
+  try{
+    if (!AC){
+      var C = window.AudioContext || window.webkitAudioContext;
+      if (C) AC = new C();
+    }
+    if (AC && AC.state === 'suspended' && AC.resume) AC.resume();
+  }catch(e){}
+}
+function tone(freq, dur, type, vol, delay){
+  if (!AC) return;
+  try{
+    var t = AC.currentTime + (delay || 0);
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol || 0.08, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + dur + 0.02);
+  }catch(e){}
+}
+function sfx(k){
+  if (!S.sound || !AC) return;
+  if (k === 'shoot') tone(180, 0.06, 'triangle', 0.06);
+  else if (k === 'hit') tone(320, 0.035, 'square', 0.02);
+  else if (k === 'pot'){ tone(420, 0.09, 'sine', 0.06); tone(560, 0.1, 'triangle', 0.05, 0.06); }
+  else if (k === 'foul'){ tone(220, 0.14, 'sawtooth', 0.05); tone(150, 0.18, 'sine', 0.05, 0.1); }
+  else if (k === 'win'){ [523,659,784,1047].forEach(function(f,i){ tone(f, 0.16, 'triangle', 0.06, i*0.09); }); }
+}
+
+/* ---------- 工具 ---------- */
+function clamp(v, lo, hi){ return v < lo ? lo : (v > hi ? hi : v); }
+function findCue(balls){
+  for (var i=0;i<balls.length;i++) if (balls[i].num === 0) return balls[i];
+  return null;
+}
+function toLogic(cx, cy){
+  var r = cv.getBoundingClientRect();
+  var s = (r.width || 1) / BW;
+  return { x:(cx - r.left)/s - BORDER, y:(cy - r.top)/s - BORDER };
+}
+
+/* ---------- 尺寸自适应（参考 tetris.html 的 resize + devicePixelRatio） ---------- */
+function resize(){
+  var wrap = $('tablewrap');
+  var aw = wrap.clientWidth - 4, ah = wrap.clientHeight - 4;
+  if (aw < 40 || ah < 40) return;
+  var scale = Math.min(aw / BW, ah / BH);
+  if (scale <= 0) return;
+  view.scale = scale;
+  var cw = Math.floor(BW * scale), ch = Math.floor(BH * scale);
+  cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
+  cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
+  draw();
+}
+function roundRect(c, x, y, w, h, r){
+  r = Math.min(r, w/2, h/2);
+  c.beginPath();
+  c.moveTo(x+r, y); c.lineTo(x+w-r, y); c.quadraticCurveTo(x+w, y, x+w, y+r);
+  c.lineTo(x+w, y+h-r); c.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  c.lineTo(x+r, y+h); c.quadraticCurveTo(x, y+h, x, y+h-r);
+  c.lineTo(x, y+r); c.quadraticCurveTo(x, y, x+r, y); c.closePath();
+}
+
+/* ---------- 绘制 ---------- */
+function drawBall(c, b){
+  var x = b.x, y = b.y, R = E.R;
+  c.save();
+  c.beginPath(); c.arc(x+1.4, y+1.8, R, 0, 2*Math.PI);
+  c.fillStyle = 'rgba(0,0,0,.30)'; c.fill();
+  c.beginPath(); c.arc(x, y, R, 0, 2*Math.PI);
+  c.fillStyle = b.stripe ? '#f2efe4' : b.color; c.fill();
+  if (b.stripe){
+    c.save(); c.beginPath(); c.arc(x, y, R, 0, 2*Math.PI); c.clip();
+    c.fillStyle = b.color; c.fillRect(x-R, y-R*0.52, 2*R, R*1.04);
+    c.restore();
+  }
+  c.beginPath(); c.arc(x, y, R*0.46, 0, 2*Math.PI);
+  c.fillStyle = '#f6f4ea'; c.fill();
+  if (b.num > 0){
+    c.fillStyle = '#17181c'; c.font = 'bold ' + (R*0.62).toFixed(0) + 'px sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(String(b.num), x, y + 0.5);
+  }
+  c.beginPath(); c.arc(x - R*0.34, y - R*0.38, R*0.22, 0, 2*Math.PI);
+  c.fillStyle = 'rgba(255,255,255,.5)'; c.fill();
+  c.restore();
+}
+function rayToRail(ox, oy, dx, dy){
+  var tx = Infinity, ty = Infinity;
+  if (dx > 0) tx = (E.W - E.R - ox)/dx; else if (dx < 0) tx = (E.R - ox)/dx;
+  if (dy > 0) ty = (E.H - E.R - oy)/dy; else if (dy < 0) ty = (E.R - oy)/dy;
+  return Math.min(tx, ty);
+}
+function draw(){
+  var c = ctx, s = view.scale * dpr, R = E.R, i;
+  c.setTransform(s, 0, 0, s, BORDER*s, BORDER*s);
+  c.clearRect(-BORDER, -BORDER, BW, BH);
+
+  /* 木质外框 */
+  var g = c.createLinearGradient(-BORDER, -BORDER, -BORDER, E.H+BORDER);
+  g.addColorStop(0, '#3a2a1c'); g.addColorStop(1, '#231810');
+  roundRect(c, -BORDER, -BORDER, BW, BH, 26);
+  c.fillStyle = g; c.fill();
+  c.lineWidth = 2; c.strokeStyle = '#0b0805'; c.stroke();
+
+  /* 台面毡 */
+  var fg = c.createLinearGradient(0, 0, E.W, E.H);
+  fg.addColorStop(0, '#0d7842'); fg.addColorStop(1, '#08582f');
+  c.fillStyle = fg; c.fillRect(0, 0, E.W, E.H);
+  /* 库边内沿 */
+  c.lineWidth = 6; c.strokeStyle = 'rgba(0,0,0,.18)'; c.strokeRect(3, 3, E.W-6, E.H-6);
+  /* 开球线与脚点 */
+  c.strokeStyle = 'rgba(255,255,255,.13)'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(E.HEAD_X, R); c.lineTo(E.HEAD_X, E.H-R); c.stroke();
+  c.beginPath(); c.arc(E.HEAD_X, E.FOOT_Y, 3, 0, 2*Math.PI);
+  c.fillStyle = 'rgba(255,255,255,.28)'; c.fill();
+  c.beginPath(); c.arc(E.FOOT_X, E.FOOT_Y, 3, 0, 2*Math.PI); c.fill();
+
+  /* 袋口 */
+  for (i=0;i<E.POCKETS.length;i++){
+    var pk = E.POCKETS[i];
+    c.beginPath(); c.arc(pk[0], pk[1], R*1.75, 0, 2*Math.PI);
+    c.fillStyle = '#07090c'; c.fill();
+    c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.5)'; c.stroke();
+  }
+
+  /* 瞄准线 / 预测线 */
+  var cue = findCue(S.balls);
+  if (S.phase === 'aim' && cue && !cue.pocketed && S.rule && !S.rule.gameOver){
+    var a = S.aimAngle * Math.PI/180, dx = Math.cos(a), dy = Math.sin(a);
+    var info = E.firstBallAlong(S.balls, cue.x, cue.y, dx, dy);
+    var t = info ? info.t : rayToRail(cue.x, cue.y, dx, dy);
+    if (t < 0) t = 0;
+    var ex = cue.x + dx*t, ey = cue.y + dy*t;
+    c.save();
+    c.setLineDash([9, 7]); c.lineWidth = 1.6; c.strokeStyle = 'rgba(255,255,255,.8)';
+    c.beginPath(); c.moveTo(cue.x, cue.y); c.lineTo(ex, ey); c.stroke();
+    c.setLineDash([]);
+    c.beginPath(); c.arc(ex, ey, R, 0, 2*Math.PI);
+    c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 1.2; c.stroke();
+    if (info){
+      c.strokeStyle = 'rgba(255,214,80,.95)'; c.lineWidth = 2.2;
+      c.beginPath(); c.moveTo(info.ball.x, info.ball.y);
+      c.lineTo(info.ball.x + info.objX*R*4.2, info.ball.y + info.objY*R*4.2); c.stroke();
+      c.beginPath(); c.arc(info.ball.x + info.objX*R*4.2, info.ball.y + info.objY*R*4.2, 2.6, 0, 2*Math.PI);
+      c.fillStyle = 'rgba(255,214,80,.95)'; c.fill();
+    }
+    c.restore();
+  }
+
+  /* 球 */
+  for (i=0;i<S.balls.length;i++) if (!S.balls[i].pocketed) drawBall(c, S.balls[i]);
+}
+
+/* ---------- HUD ---------- */
+function updateHUD(){
+  var r = S.rule;
+  if (!r) return;
+  var p = r.current;
+  $('hudPlayer').textContent = (S.mode === 'practice') ? '练习' : ('玩家 ' + (p+1));
+  $('hudShots').textContent = (S.mode === 'practice') ? String(r.shots[0]) : (r.shots[0] + ' : ' + r.shots[1]);
+  $('hudPotted').textContent = (S.mode === 'practice')
+    ? (r.potted[0] + ' / 15')
+    : (r.potted[0] + ' : ' + r.potted[1]);
+  $('hudState').textContent = (S.phase === 'rolling') ? '击球中'
+    : (r.gameOver ? '已结束' : (S.phase === 'aim' ? '瞄准' : '准备'));
+  var g = '';
+  if (S.mode === 'practice'){
+    g = '单人练习 · 自由击球' + (S.best > 0 ? (' · 最佳 ' + S.best + ' 球') : '');
+  } else if (r.gameOver){
+    g = '玩家 ' + (r.winner+1) + ' 获胜 · 点击「重新开球」再来一局';
+  } else if (r.open){
+    g = '球局开放 · 首杆进球决定全色 / 花色归属 · ' + (r.last || '请击球');
+  } else {
+    g = '玩家1 ' + (r.owners[0]==='solid'?'全色':'花色') + ' · 玩家2 ' + (r.owners[1]==='solid'?'全色':'花色') + ' · ' + (r.last || '');
+  }
+  $('hudGroup').textContent = g;
+}
+function syncControls(){
+  $('angVal').textContent = Math.round(((S.aimAngle % 360) + 360) % 360) + '°';
+  var pct = Math.round(S.power * 100);
+  $('powerVal').textContent = pct + '%';
+  $('powerFill').style.width = pct + '%';
+  $('modePractice').className = 'chip' + (S.mode === 'practice' ? ' on' : '');
+  $('modePvp').className = 'chip' + (S.mode === 'pvp' ? ' on' : '');
+  $('soundBtn').className = 'chip' + (S.sound ? ' on' : '');
+  $('soundBtn').textContent = S.sound ? '♪ 音效' : '♪ 静音';
+}
+
+/* ---------- 游戏流程 ---------- */
+function resolveCueSpot(cue){
+  var loop = 0;
+  while (loop++ < 30){
+    var overlap = false;
+    for (var i=0;i<S.balls.length;i++){
+      var b = S.balls[i];
+      if (b === cue || b.pocketed) continue;
+      var dx = b.x - cue.x, dy = b.y - cue.y;
+      if (dx*dx + dy*dy < (2*E.R)*(2*E.R)){ overlap = true; break; }
+    }
+    if (!overlap) break;
+    cue.y += 2*E.R + 1;
+    if (cue.y > E.H - E.R){ cue.y = E.FOOT_Y; cue.x += 2*E.R + 1; }
+  }
+}
+function rerack(){
+  S.balls = E.rack();
+  S.rule = E.initRule(S.mode);
+  S.ev = E.newShotEvents();
+  S.phase = 'aim';
+  S.acc = 0; lastFrame = 0;
+  S.aimAngle = 0; S.power = 0.7;
+  $('overlay').className = 'overlay hide';
+  syncControls(); updateHUD(); draw();
+}
+function setMode(mode){
+  if (mode !== 'practice' && mode !== 'pvp') return;
+  S.mode = mode;
+  rerack();
+  save();
+}
+function shoot(){
+  if (S.phase !== 'aim' || !S.rule || S.rule.gameOver) return;
+  if (S.power < 0.02) return;
+  ensureAudio();
+  E.shotCue(S.balls, S.aimAngle, S.power);
+  S.ev = E.newShotEvents();
+  S.phase = 'rolling';
+  S.acc = 0; lastFrame = 0;
+  sfx('shoot');
+  updateHUD(); draw();
+}
+function finishShot(){
+  var res = E.resolveShot(S.rule, S.ev);
+  if (S.ev.cueScratch){
+    var cue = findCue(S.balls);
+    if (cue){
+      cue.pocketed = false; cue.vx = 0; cue.vy = 0;
+      cue.x = E.HEAD_X; cue.y = E.FOOT_Y;
+      resolveCueSpot(cue);
+    }
+  }
+  if (S.mode === 'practice' && S.rule.potted[0] > S.best) S.best = S.rule.potted[0];
+  if (res.gameOver) sfx('win');
+  else if (res.foul) sfx('foul');
+  else if (S.ev.pocketed.length > 0) sfx('pot');
+  S.phase = res.gameOver ? 'over' : 'aim';
+  S.ev = E.newShotEvents();
+  S.power = 0.7;
+  syncControls(); updateHUD(); save();
+  if (res.gameOver){
+    $('ovTitle').textContent = '本局结束';
+    $('ovText').textContent = res.message;
+    $('overlay').className = 'overlay';
+  }
+  draw();
+}
+
+/* ---------- 主循环：固定时间步子步进 ---------- */
+function loop(ts){
+  requestAnimationFrame(loop);
+  if (!lastFrame) lastFrame = ts;
+  var dt = Math.min(60, ts - lastFrame); lastFrame = ts;
+  if (S.phase === 'rolling'){
+    S.acc += dt/1000;
+    var n = 0;
+    while (S.acc >= E.DT && n < 16){ E.step(S.balls, E.DT, S.ev); S.acc -= E.DT; n++; }
+    if (E.allStopped(S.balls)) finishShot();
+    draw();
+  }
+}
+/* 供探针同步驱动一整杆（不依赖 rAF） */
+function drive(maxSteps){
+  var n = 0;
+  while (S.phase === 'rolling' && n < maxSteps){
+    E.step(S.balls, E.DT, S.ev); n++;
+    if (E.allStopped(S.balls)) finishShot();
+  }
+  return n;
+}
+
+/* ---------- 输入：按钮（touch + mouse，时间戳去重） ---------- */
+function bindTap(el, fn){
+  var lastTouch = 0;
+  el.addEventListener('touchstart', function(e){ lastTouch = Date.now(); if (e.cancelable) e.preventDefault(); }, false);
+  el.addEventListener('touchend', function(e){ if (e.cancelable) e.preventDefault(); fn(); }, false);
+  el.addEventListener('mousedown', function(e){ if (Date.now()-lastTouch < 700) return; if (e.cancelable) e.preventDefault(); }, false);
+  el.addEventListener('mouseup', function(e){ if (Date.now()-lastTouch < 700) return; if (e.cancelable) e.preventDefault(); fn(); }, false);
+}
+function bindTable(){
+  var dragging = false, sx = 0, sy = 0, lastTouch = 0;
+  function begin(p){ dragging = true; sx = p.x; sy = p.y; }
+  function move(p){
+    if (!dragging) return;
+    var dx = sx - p.x, dy = sy - p.y;
+    var len = Math.sqrt(dx*dx + dy*dy);
+    if (len > 4){
+      S.aimAngle = Math.atan2(dy, dx) * 180/Math.PI;
+      S.power = clamp(len/MAX_DRAG, 0, 1);
+      syncControls(); draw();
+    }
+  }
+  function end(p){
+    if (!dragging) return;
+    dragging = false;
+    var dx = sx - p.x, dy = sy - p.y;
+    var len = Math.sqrt(dx*dx + dy*dy);
+    S.power = clamp(len/MAX_DRAG, 0, 1);
+    if (S.power > 0.03){ S.aimAngle = Math.atan2(dy, dx) * 180/Math.PI; syncControls(); shoot(); }
+    else { syncControls(); draw(); }
+  }
+  cv.addEventListener('touchstart', function(e){
+    var t = e.changedTouches[0]; begin(toLogic(t.clientX, t.clientY));
+    lastTouch = Date.now(); ensureAudio(); if (e.cancelable) e.preventDefault();
+  }, false);
+  cv.addEventListener('touchmove', function(e){
+    var t = e.changedTouches[0]; move(toLogic(t.clientX, t.clientY));
+    if (e.cancelable) e.preventDefault();
+  }, false);
+  cv.addEventListener('touchend', function(e){
+    var t = e.changedTouches[0]; end(toLogic(t.clientX, t.clientY));
+    if (e.cancelable) e.preventDefault();
+  }, false);
+  cv.addEventListener('touchcancel', function(){ dragging = false; }, false);
+  cv.addEventListener('mousedown', function(e){
+    if (Date.now()-lastTouch < 700) return;
+    ensureAudio(); begin(toLogic(e.clientX, e.clientY));
+  }, false);
+  window.addEventListener('mousemove', function(e){
+    if (Date.now()-lastTouch < 700 || !dragging) return;
+    move(toLogic(e.clientX, e.clientY));
+  }, false);
+  window.addEventListener('mouseup', function(e){
+    if (Date.now()-lastTouch < 700 || !dragging) return;
+    end(toLogic(e.clientX, e.clientY));
+  }, false);
+}
+/* 力度滑条：点击 / 拖拽设定力度 */
+function setPowerFromX(cx){
+  var r = $('powerTrack').getBoundingClientRect();
+  S.power = clamp((cx - r.left) / (r.width || 1), 0, 1);
+  syncControls(); draw();
+}
+function bindPowerTrack(){
+  var el = $('powerTrack'), down = false, lastTouch = 0;
+  el.addEventListener('touchstart', function(e){
+    var t = e.changedTouches[0]; down = true; lastTouch = Date.now();
+    setPowerFromX(t.clientX); if (e.cancelable) e.preventDefault();
+  }, false);
+  el.addEventListener('touchmove', function(e){
+    if (!down) return;
+    setPowerFromX(e.changedTouches[0].clientX); if (e.cancelable) e.preventDefault();
+  }, false);
+  el.addEventListener('touchend', function(e){ down = false; if (e.cancelable) e.preventDefault(); }, false);
+  el.addEventListener('touchcancel', function(){ down = false; }, false);
+  el.addEventListener('mousedown', function(e){
+    if (Date.now()-lastTouch < 700) return;
+    down = true; setPowerFromX(e.clientX); if (e.cancelable) e.preventDefault();
+  }, false);
+  window.addEventListener('mousemove', function(e){
+    if (Date.now()-lastTouch < 700 || !down) return;
+    setPowerFromX(e.clientX);
+  }, false);
+  window.addEventListener('mouseup', function(){ down = false; }, false);
+}
+
+/* ---------- 绑定控件 ---------- */
+bindTap($('angDown'), function(){ S.aimAngle -= 3; syncControls(); draw(); });
+bindTap($('angUp'), function(){ S.aimAngle += 3; syncControls(); draw(); });
+bindTap($('powerDown'), function(){ S.power = clamp(S.power - 0.08, 0, 1); syncControls(); draw(); });
+bindTap($('powerUp'), function(){ S.power = clamp(S.power + 0.08, 0, 1); syncControls(); draw(); });
+bindTap($('shootBtn'), shoot);
+bindTap($('rerackBtn'), function(){ rerack(); save(); });
+bindTap($('modePractice'), function(){ setMode('practice'); });
+bindTap($('modePvp'), function(){ setMode('pvp'); });
+bindTap($('soundBtn'), function(){
+  S.sound = !S.sound; syncControls(); save();
+  if (S.sound){ ensureAudio(); sfx('shoot'); }
+});
+bindTap($('ovBtn'), function(){ rerack(); save(); });
+bindTable();
+bindPowerTrack();
+
+/* ---------- 页面生命周期 ---------- */
+window.addEventListener('resize', resize, false);
+window.addEventListener('orientationchange', function(){ setTimeout(resize, 220); }, false);
+
+/* ---------- 启动 ---------- */
+restore();
+rerack();
+resize();
+setTimeout(resize, 60);
+requestAnimationFrame(loop);
+
+/* 供自动化测试探针调用（不影响正常玩法） */
+window.__T = {
+  S:S, E:E, shoot:shoot, finishShot:finishShot, drive:drive, resize:resize, draw:draw,
+  rerack:rerack, setMode:setMode, toLogic:toLogic, updateHUD:updateHUD, syncControls:syncControls,
+  setAim:function(a, p){ S.aimAngle = a; S.power = clamp(p, 0, 1); syncControls(); draw(); },
+  step:function(n){ for (var i=0;i<n;i++) E.step(S.balls, E.DT, S.ev); draw(); }
+};
+})();
+</script>
+</body>
+</html>

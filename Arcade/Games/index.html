@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0e1117">
+<title>怀旧游戏厅 · 本地版</title>
+<style>
+:root[data-theme="dark"]{
+  --bg:#0e1117;--panel:#181d27;--panel2:#202634;--line:#2b3444;
+  --txt:#eef3fa;--dim:#8c98ab;--accent:#5ad6c8;--shadow:rgba(0,0,0,.45);
+}
+:root[data-theme="light"]{
+  --bg:#eef2f8;--panel:#ffffff;--panel2:#f2f6fb;--line:#ccd6e4;
+  --txt:#1b2432;--dim:#65738a;--accent:#0e9c8c;--shadow:rgba(30,50,90,.14);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;width:100%;height:100%;background:var(--bg);color:var(--txt)}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+     user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#app{width:100%;min-height:100%;max-width:560px;margin:0 auto;padding:12px 12px 20px}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}
+h1{margin:0;font-size:23px;letter-spacing:2px;line-height:1.2}
+.sub{margin-top:4px;font-size:10px;color:var(--dim);letter-spacing:1.4px;line-height:1.6}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--panel);color:var(--dim);
+      font-size:11px;padding:7px 9px;border-radius:9px;line-height:1;cursor:pointer;white-space:nowrap}
+.chip.on{color:var(--accent);border-color:var(--accent)}
+.banner{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+        padding:9px 11px;margin-bottom:12px;font-size:11px;color:var(--dim);line-height:1.7}
+.banner b{color:var(--accent);font-weight:800}
+.grid{display:flex;flex-wrap:wrap;gap:9px}
+.game{position:relative;display:block;width:calc(50% - 4.5px);min-height:126px;
+      background:var(--panel);border:1px solid var(--line);border-radius:14px;
+      padding:11px 10px 10px;text-decoration:none;color:var(--txt);overflow:hidden}
+.game:active{transform:scale(.975);border-color:var(--accent)}
+.badge{position:absolute;right:8px;top:8px;font-size:9px;color:#06201d;background:var(--accent);
+       padding:2px 6px;border-radius:6px;letter-spacing:.5px;font-weight:800;display:none}
+.game.last .badge{display:block}
+.ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+     font-size:23px;font-weight:800;color:#0e1117;box-shadow:inset 0 -3px 0 rgba(0,0,0,.16)}
+.name{display:block;margin-top:9px;font-size:14px;font-weight:800;letter-spacing:.5px}
+.desc{display:block;margin-top:3px;font-size:10px;color:var(--dim);line-height:1.55;min-height:31px}
+.tag{display:inline-block;margin-top:5px;font-size:9px;color:var(--dim);
+     border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.about{display:flex;align-items:center;justify-content:center;width:calc(50% - 4.5px);min-height:126px;
+       background:transparent;border:1px dashed var(--line);border-radius:14px;
+       color:var(--dim);font-size:12px;cursor:pointer;text-align:center;line-height:1.8}
+.about .qi{display:block;font-size:26px;font-weight:800;color:var(--accent);line-height:1.3}
+.foot{margin-top:14px;text-align:center;font-size:10px;color:var(--dim);line-height:1.9}
+.foot b{color:var(--txt)}
+.mask{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(8,11,17,.84);z-index:20;
+      display:flex;align-items:center;justify-content:center;padding:18px}
+.mask.hide{display:none}
+.card{width:100%;max-width:290px;background:var(--panel);border:1px solid var(--line);
+      border-radius:16px;padding:20px 17px;box-shadow:0 14px 40px var(--shadow)}
+.card h2{margin:0 0 10px;font-size:18px;letter-spacing:1px}
+.card p{margin:0 0 10px;font-size:12px;line-height:1.9;color:var(--dim)}
+.card .ok{width:100%;padding:11px 0;border:0;border-radius:10px;background:var(--accent);
+          color:#06201d;font-size:14px;font-weight:800;letter-spacing:2px;cursor:pointer}
+@media (min-width:470px){ .game,.about{min-height:136px} .name{font-size:15px} }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <div>
+      <h1>怀旧游戏厅</h1>
+      <div class="sub">7 款经典 · 纯本地运行 · 无广告无联网</div>
+    </div>
+    <button class="chip" id="themeBtn" type="button">☀ 浅色</button>
+  </div>
+
+  <div class="banner">
+    共 <b>7</b> 款游戏，全部内置在本机，<b>不申请任何权限</b>（含联网权限）。<br>
+    点卡片开始玩；游戏里按手机 <b>返回键</b> 即可回到这个大厅。
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="foot">
+    单文件网页 + 零权限 WebView 壳 · 断网可用 · 进度与最高分存在本机<br>
+    <b>京剧锣鼓盘 → 中国象棋 → 俄罗斯方块 → 斗地主 → 台球 → 扫雷 → 军旗</b>
+  </div>
+</div>
+
+<div class="mask hide" id="mask">
+  <div class="card">
+    <h2>使用说明</h2>
+    <p>1. 点任意游戏卡片进入，全部内容已打包在安装包里，不需要下载。<br>
+       2. 游戏中按手机系统的<b>返回键</b>回到大厅；在大厅再按返回键退出应用。<br>
+       3. 最高分、棋局、设置都保存在本机，卸载应用才会清除。<br>
+       4. 安装包为自签名，小米/Redmi 首次安装若提示「纯净模式 / 未知来源」，选「仍要安装」即可。<br>
+       5. 本应用不申请联网、存储、电话等任何权限，也没有广告、账号与统计。</p>
+    <button class="ok" id="okBtn" type="button">知道了</button>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var GAMES = [
+  { key:'luogupan',    href:'luogupan.html',    name:'京剧锣鼓盘', desc:'19 个拟声字鼓键，锣鼓经预设与录制回放', tag:'音效 · 节奏', ch:'锣', color:'#deb060' },
+  { key:'xiangqi',     href:'xiangqi.html',     name:'中国象棋',   desc:'完整规则、将死判负，本地人机三档难度', tag:'棋类 · 对战', ch:'棋', color:'#4c7cf2' },
+  { key:'tetris',      href:'tetris.html',      name:'俄罗斯方块', desc:'7-bag 随机、SRS 旋转、连击与逐级加速', tag:'益智 · 手速', ch:'块', color:'#39c9e8' },
+  { key:'doudizhu',    href:'doudizhu.html',    name:'经典斗地主', desc:'叫分抢地主，全牌型与两个本地 AI', tag:'牌类 · 对战', ch:'斗', color:'#f05f63' },
+  { key:'billiards',   href:'billiards.html',   name:'经典台球',   desc:'8 球制物理碰撞，练习与双人对战', tag:'体育 · 物理', ch:'球', color:'#4ed0b0' },
+  { key:'minesweeper', href:'minesweeper.html', name:'经典扫雷',   desc:'三档难度、首击安全、插旗与最佳纪录', tag:'益智 · 经典', ch:'雷', color:'#f4c94c' },
+  { key:'junqi',       href:'junqi.html',       name:'经典军旗',   desc:'陆战棋翻棋暗棋，工兵挖雷、扛旗获胜', tag:'棋类 · 策略', ch:'旗', color:'#b57af0' }
+];
+function read(k){ try{ return localStorage.getItem('arcade_'+k); }catch(e){ return null; } }
+function write(k,v){ try{ localStorage.setItem('arcade_'+k,v); }catch(e){} }
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function build(){
+  var last = read('last'), html = '', i, g;
+  for (i=0;i<GAMES.length;i++){
+    g = GAMES[i];
+    html += '<a class="game'+(last===g.key?' last':'')+'" href="'+g.href+'" data-key="'+g.key+'">'+
+              '<span class="badge">最近玩过</span>'+
+              '<span class="ico" style="background:'+g.color+'">'+g.ch+'</span>'+
+              '<span class="name">'+esc(g.name)+'</span>'+
+              '<span class="desc">'+esc(g.desc)+'</span>'+
+              '<span class="tag">'+esc(g.tag)+'</span>'+
+            '</a>';
+  }
+  html += '<div class="about" id="about"><div><span class="qi">?</span>使用说明<br>关于本应用</div></div>';
+  document.getElementById('grid').innerHTML = html;
+
+  var links = document.getElementById('grid').querySelectorAll('a.game');
+  for (i=0;i<links.length;i++){
+    links[i].addEventListener('click', function(){
+      var k = this.getAttribute('data-key');
+      write('last', k);
+      try{ var c = parseInt(read('count_'+k),10)||0; write('count_'+k, String(c+1)); }catch(e){}
+    }, false);
+  }
+  document.getElementById('about').onclick = function(){
+    document.getElementById('mask').className = 'mask';
+  };
+}
+function theme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  var b = document.getElementById('themeBtn');
+  b.textContent = (t === 'dark') ? '☀ 浅色' : '☾ 深色';
+  b.className = 'chip' + (t === 'light' ? ' on' : '');
+  write('theme', t);
+}
+document.getElementById('themeBtn').onclick = function(){
+  theme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+};
+document.getElementById('okBtn').onclick = function(){
+  document.getElementById('mask').className = 'mask hide';
+};
+document.getElementById('mask').onclick = function(e){
+  if (e.target === this) this.className = 'mask hide';
+};
+build();
+theme(read('theme') === 'light' ? 'light' : 'dark');
+
+window.__ARCADE = { games:GAMES, build:build, theme:theme };
+})();
+</script>
+</body>
+</html>
