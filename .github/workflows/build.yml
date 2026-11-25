@@ -27,6 +27,7 @@ jobs:
 
       - name: Build unsigned .app
         run: |
+          set -o pipefail
           xcodebuild \
             -project Arcade.xcodeproj \
             -scheme Arcade \
@@ -37,7 +38,8 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             IPHONEOS_DEPLOYMENT_TARGET=12.0 \
             build 2>&1 | tee xcodebuild.log
-          test -d build/Build/Products/Release-iphoneos/Arcade.app
+          test -f build/Build/Products/Release-iphoneos/Arcade.app/Info.plist
+          test -f build/Build/Products/Release-iphoneos/Arcade.app/Arcade
 
       - name: Package IPA
         run: |
